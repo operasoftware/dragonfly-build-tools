@@ -1,0 +1,8 @@
+syntax: glob
+*.pyc
+build/*
+dist/*
+*/Thumbs.db
+.DS_Store
+df2.egg-info
+

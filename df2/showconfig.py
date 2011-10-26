@@ -7,3 +7,4 @@ def showconfig(args):
 def setup_subparser(subparsers, config):
 	subp = subparsers.add_parser('showconfig', help="Show the config file.")
 	subp.set_defaults(func=showconfig)
+	
