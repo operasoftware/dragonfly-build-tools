@@ -3,14 +3,10 @@ import sys
 import re
 import codecs
 import time
+import argparse
 
 def get_timestamp():
     return time.strftime("%a %d %b %Y %H:%M", time.localtime())
-
-LANGS = ['be', 'bg', 'cs', 'da', 'de', 'el', 'en-GB', 'es-ES', 'es-LA', 'et', 
-         'fi', 'fr', 'fr-CA', 'fy', 'gd', 'hi', 'hr', 'hu', 'id', 'it', 'ja', 
-         'ka', 'ko', 'lt', 'mk', 'nb', 'nl', 'nn', 'pl', 'pt', 'pt-BR', 'ro', 
-         'ru', 'sk', 'sr', 'sv', 'ta', 'te', 'tr', 'uk', 'vi', 'zh-cn', 'zh-tw']
 
 """
 msgid "<LanguageCode>"
@@ -68,14 +64,9 @@ RE_STR = re.compile(r"".join([
          r"msgstr\s*((?:\"(?:.(?!\"[\r\n]))*.?\"\s+)+)",
          ]))
 
-
 RE_PLACEHOLDERS = re.compile(r"(%(?:\([^\)]*\))?s)")
 RE_LINEBREAK = re.compile(r"\"[\r\n]+\"")
 RE_STR_CHECK = re.compile(r"(\"(?:[^\\\"]|\\.)*\")")
-LANGS = ['be', 'bg', 'cs', 'da', 'de', 'el', 'en-GB', 'es-ES', 'es-LA', 'et', 
-         'fi', 'fr', 'fr-CA', 'fy', 'gd', 'hi', 'hr', 'hu', 'id', 'it', 'ja', 
-         'ka', 'ko', 'lt', 'mk', 'nb', 'nl', 'nn', 'pl', 'pt', 'pt-BR', 'ro', 
-         'ru', 'sk', 'sr', 'sv', 'ta', 'te', 'tr', 'uk', 'vi', 'zh-cn', 'zh-tw']
 
 def get_ids_from_js(js_file):
 	ID = 1
@@ -127,6 +118,8 @@ def command_po2js(args):
 	if not os.path.exists(dest): 
 		os.makedirs(dest)
 
+	langs = args.config.get('po2js', {}).get('langs', [])
+
 	for root, dirs, files in os.walk(src):
 		absroot = os.path.abspath(root)
 		if "unite" in absroot:
@@ -134,7 +127,7 @@ def command_po2js(args):
 		for name in files:
 			if name.endswith(".po"):
 				lang = name[:-3]
-				if lang in LANGS:
+				if lang in langs:
 					root = os.path.normpath(root)
 					out, ids = po2js(os.path.join(root, name), name)
 					js_file = "ui_strings-%s.js" % name[:-3]
@@ -145,3 +138,15 @@ def command_po2js(args):
 					with open(os.path.join(dest, js_file), "wb") as f:
 						f.write(codecs.BOM_UTF8)
 						f.write("\n".join(out)) 
+
+def setup_subparser(subparsers, config):
+	subp = subparsers.add_parser('po2js', help="Covert .po files to .js files.")
+	subp.add_argument('src', 
+	                  help="The source directory, typically core/translations.")
+	subp.add_argument('dest', help="The destination directory.")
+	subp.add_argument('ref', 
+	                  nargs='?',
+	                  type=argparse.FileType('rb', 0),
+	                  help='''Optional path to a .js file to check the
+	                          completeness of the strings.''')
+	subp.set_defaults(func=command_po2js)

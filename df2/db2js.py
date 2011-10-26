@@ -3,6 +3,7 @@ import sys
 import re
 import codecs
 import time
+import argparse
 
 def get_timestamp():
     return time.strftime("%a %d %b %Y %H:%M", time.localtime())
@@ -53,7 +54,7 @@ ui_strings.%s = "%s";
 
 RE_ESC_QUOTES = re.compile(r"(?<!\\)\"")
 
-def command_db2js(args):
+def db2js(args):
 
 	out = []
 	content = args.src.read()
@@ -69,3 +70,17 @@ def command_db2js(args):
 	out.sort(key=lambda entry: entry[1])
 	args.dest.write(HEAD)
 	args.dest.write("\n".join([ENTRY % entry for entry in out]))
+
+def setup_subparser(subparsers, config):
+	subp = subparsers.add_parser('db2js', 
+	                                     help='''Create an .js file from an 
+	                                     .db file.''')
+	subp.add_argument('src',
+	                          type=argparse.FileType('rb', 0),
+	                          help='''The source file, typically
+	                          english.db file.''')
+	subp.add_argument('dest',
+	                          type=argparse.FileType('wb', 0),
+	                          help='src help')
+
+	subp.set_defaults(func=db2js)
