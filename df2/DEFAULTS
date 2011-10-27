@@ -1,0 +1,52 @@
+{
+	"po2js": {
+		"langs": ["be", "bg", "cs", "da", "de", "el", "en-GB", "es-ES", "es-LA", 
+		          "et", "fi", "fr", "fr-CA", "fy", "gd", "hi", "hr", "hu", "id",
+		          "it", "ja", "ka", "ko", "lt", "mk", "nb", "nl", "nn", "pl",
+		          "pt", "pt-BR", "ro", "ru", "sk", "sr", "sv", "ta", "te", "tr",
+		          "uk", "vi", "zh-cn", "zh-tw"]
+	},
+	"build": {
+		"default_profile": {
+			"name": "-",
+			"src": "src",
+			"dest": "build",
+			"copy_blacklist": ["scripts",
+			                   "ui-style",
+			                   "ecma-debugger", 
+			                   "ui-strings",
+			                   "ui-scripts",
+			                   "lib",
+			                   "resource-manager",
+			                   "syntaxhighlight"],
+			"make_data_uris": true,
+			"license": true,
+			"force_overwrite": true,
+			"logs": "",
+			"create_log": false,
+			"zips": "",
+			"create_zips": false,
+			"translate": false,
+			"minify": false,
+			"minify_blacklist": [],
+			"create_manifests": false,
+			"base_root_dir": "",
+			"manifest_root": ""
+		},
+		"profiles": {
+			"test": {
+				"name": "test-build",
+				"src": "src",
+				"dest": "test-build",
+				"logs": "test-build/logs",
+				"create_log": true,
+				"zips": "test-build/zips",
+				"create_zips": true,
+				"translate": true,
+				"minify": true,
+				"create_manifests": true,
+				"manifest_root": "test-build"
+			}
+		}
+	}
+}

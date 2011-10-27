@@ -8,6 +8,7 @@ import zipfile
 import base64
 import StringIO
 import urllib
+import subprocess
 
 """
 uglifyjs is a python wrapper for uglifyjs.
@@ -26,6 +27,7 @@ It can be any javascript minifyer. The required interface is:
 try:
     import uglifyjs as jsminify
 except ImportError:
+    print "failed to import uglifyjs"
     import jsminify
 
 
@@ -42,6 +44,8 @@ _re_comment = re.compile("""\s*<!--.*-->\s*""")
 _re_script = re.compile("\s?<script +src=\"(?P<src>[^\"]*)\"")
 _re_css = re.compile("\s?<link +rel=\"stylesheet\" +href=\"(?P<href>[^\"]*)\"/>")
 _re_condition = re.compile("\s+if\s+(not)? (.*)")
+_re_client_lang_file = re.compile("^client-([a-zA-Z\-]{2,5})\.xml$")
+_re_linked_source = re.compile(r"(?:src|href)\s*=\s*(\"[^\"]*\"|'[^']*')")
 
 _concatcomment =u"""
 /* dfbuild: concatenated from: %s */
@@ -240,7 +244,7 @@ def _is_utf8(path):
     f = open(path, "rb")
     return "test-scripts" in path and True or f.read(3) == codecs.BOM_UTF8
     
-def _minify_buildout(src):
+def _minify_buildout(src, blacklist):
     """
     Run minification on all javascript files in directory src. Minification
     is done in-place, so the original file is replaced with the minified one.
@@ -250,7 +254,7 @@ def _minify_buildout(src):
             abs = os.path.join(base, file)
             jsminify.minify_in_place(abs)
             
-def _localize_buildout(src, langdir):
+def _localize_buildout(src, langdir, option_minify):
     """Make a localized version of the build dir. That is, with one
     script.js for each language, with a prefix suffix for each language
     src: directory containing the finished build
@@ -284,11 +288,11 @@ def _localize_buildout(src, langdir):
         newscript = codecs.open(os.path.join(src,newscriptpath), "w", encoding="utf_8_sig")
         newclient = codecs.open(os.path.join(src, newclientpath), "w", encoding="utf_8_sig")
 
-        if not options.minify:
+        if not option_minify:
             newscript.write(_concatcomment % englishfile)
         newscript.write(englishdata)
         langfile = codecs.open(path, "r", encoding="utf_8_sig")
-        if not options.minify:
+        if not option_minify:
             newscript.write(_concatcomment % path)
         newscript.write(langfile.read())
         newscript.write(script_data)
@@ -513,6 +517,23 @@ def make_archive(src, dst, in_subdir=True):
             z.write(abs, rel)
 
     z.close()
+
+def make_build_archive(src, dest_dir, file_name):
+    dest = os.path.join(dest_dir, file_name.replace(".xml", ".zip"))
+    z = zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED)
+    files = [file_name]
+    
+    with open(os.path.join(src, file_name), 'r') as f:
+        content = f.read()
+        for match in _re_linked_source.finditer(content):
+            path = match.group(1).strip("\"'")
+            if path.endswith(".css") or path.endswith(".js"):
+                files.append(os.path.normpath(path))
+
+    for path in files:
+        z.write(os.path.join(src, path), path)
+    
+    z.close()
     
 
 def export(src, dst, process_directives=True, keywords={},
@@ -698,7 +719,9 @@ Destination can be either a directory or a zip file"""
                keywords=keywords, directive_vars=dirvars)
 
         if options.translate_build:
-            _localize_buildout(tempdir, os.path.join(os.path.abspath(src), "ui-strings"))
+            _localize_buildout(tempdir,
+                               os.path.join(os.path.abspath(src), "ui-strings"),
+                               options.minify)
 
         if options.make_data_uris:
             _convert_imgs_to_data_uris(dst)
@@ -720,7 +743,9 @@ Destination can be either a directory or a zip file"""
                keywords=keywords, directive_vars=dirvars)
 
         if options.translate_build:
-            _localize_buildout(dst, os.path.join(os.path.abspath(src), "ui-strings"))
+            _localize_buildout(dst,
+                               os.path.join(os.path.abspath(src), "ui-strings"),
+                               options.minify)
 
         if options.make_data_uris:
             _convert_imgs_to_data_uris(dst)
@@ -737,8 +762,186 @@ Destination can be either a directory or a zip file"""
         AUTHORS = os.path.join(src, '..', 'AUTHORS')
         if os.path.isfile(AUTHORS):
             shutil.copy(AUTHORS, os.path.join(dst, 'AUTHORS'))
-            
 
+
+ 
+def cmd_call(*args):
+    return subprocess.Popen(args, 
+                            stdout=subprocess.PIPE,
+                            stdin=subprocess.PIPE,
+                            stderr=subprocess.PIPE).communicate()
+
+def build(args):
+    build_config = args.config.get("build", {})
+    profile = {}
+    profile.update(build_config.get("default_profile", {}))
+    target_profile = build_config.get("profiles", {}).get(args.profile, None)
+    if not target_profile:
+        print "Abort.\nProfile %s not found in config." % args.profile
+        return
+    
+    # print "target_profile", target_profile
+    profile.update(target_profile)
+    # print profile
+    out, err = cmd_call('hg', 'up', args.tag)
+    if err:
+        print "Abort.\n", err
+        return
+
+    print out.strip()
+    out, err = cmd_call("hg", "log", 
+                        "-r", args.tag, 
+                        "--template", "{rev}:{node|short}")
+    if err:
+        print "Abort.\n", err
+        return
+
+    print "Updated to revision: ", out.strip()
+    rev, short_hash = out.strip().split(":", 1)
+    src = profile.get("src", None)
+    dest = profile.get("dest", None)
+    if not (src and dest):
+        print "Abort.\nMissing \"src\" or \"dest\" in the profile."
+        return
+    
+    src = os.path.abspath(os.path.normpath(src))
+    dest = os.path.abspath(os.path.normpath(dest))
+
+    if os.path.isdir(dest) and not profile.get("force_overwrite"):
+        print "Abort."
+        print "Destination exists! Set \"force_overwrite\" in the config file."
+        return
+    
+    revision_name = "%s:%s, %s, %s" % (rev,
+                                       short_hash,
+                                       profile.get("name"),
+                                       args.tag)
+    dirvars = {}
+    
+
+    if profile.get("translate"):
+        dirvars["exclude_uistrings"] = True
+
+    """
+    if options.set_base:
+        path_segs = os.path.normpath(dst).split(os.sep)
+        pos = path_segs.index(options.set_base)
+        dirvars["base_url"] = pos > -1 and "/%s/" % "/".join(path_segs[pos:]) or ""
+    """
+    
+    export(src, dest, 
+           process_directives=True,
+           exclude_dirs=profile.get("copy_blacklist"),
+           keywords={"$dfversion$": args.revision, "$revdate$": revision_name},
+           directive_vars=dirvars)
+    print "Build exported."
+
+    if profile.get("translate"):
+        _localize_buildout(dest,
+                           os.path.join(src, "ui-strings"),
+                           profile.get("minify"))
+        print "Build translated."
+
+    if profile.get("make_data_uris"):
+        _convert_imgs_to_data_uris(dest)
+        # any remaining image in ui-images is not used
+        img_dir = os.path.join(dest, 'ui-images')
+        shutil.rmtree(img_dir)
+        print "Data URIs created."
+
+    if profile.get("minify"):
+        _minify_buildout(dest, profile.get("minify_blacklist"))
+        print "Builds minified."
+
+    if profile.get("license"):
+        _add_license(dest)
+        print "License added."
+
+    AUTHORS = os.path.join(src, '..', 'AUTHORS')
+    if os.path.isfile(AUTHORS):
+        shutil.copy(AUTHORS, os.path.join(dest, 'AUTHORS'))
+    
+    
+    if profile.get("create_zips"):
+        zip_dir = os.path.abspath(profile.get("zips"))
+        zip_target = os.path.join(zip_dir, "%s.%s" % (rev, short_hash))
+        if not os.path.isdir(zip_target):
+            os.makedirs(zip_target)
+
+        for item in os.listdir(dest):
+            if os.path.isfile(os.path.join(dest, item)):
+                match = _re_client_lang_file.match(item)
+                if match:
+                    make_build_archive(dest, zip_target, match.group(0))
+                    print "Build for %s zipped." % match.group(1)
+
+    """
+    src = os.path.abspath(src)
+    z = zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED)
+    
+    if in_subdir:
+        subdir = os.path.basename(dst)
+        subdir = subdir[:subdir.rfind(".")]
+        subdir = subdir + "/"
+    else:
+        subdir=""
+    
+    for base, dirs, files in os.walk(src):
+        for file in files:
+            abs = os.path.join(base, file)
+            rel = subdir + os.path.join(base, file)[len(src)+1:]
+            z.write(abs, rel)
+
+    z.close()
+    """
+
+    """
+    print "make build, revision:", revision
+
+    try:
+        sys.argv = \
+        [
+            __file__,
+            os.path.join(root, 'src'),
+            type["local-repo"],
+            '-t',
+            '-s',
+            '-d',
+            '-m',
+            '-b', 'app',
+            '-k', '$dfversion$=' + type['name'],
+            '-k', '$revdate$=' + revision
+        ]
+        dfbuild.main()
+    except Exception, msg:
+        print "abort. making build failed. ", msg
+        return
+    """
+            
+def setup_subparser(subparsers, config):
+    subp = subparsers.add_parser('build', help="Build Dragonfly.")
+    subp.add_argument('profile', 
+                      help="""The profile to build. The profile is
+                              defined in the config file.""")
+    subp.add_argument('--revision', '-r', 
+                      required=False,
+                      default="",
+                      help="The Dragonfly revision ID.")
+    subp.add_argument('-tag', '-t', 
+                      required=False,
+                      default="tip",
+                      help="""An optional revision tag for the build. 
+                              Default is "tip".""")
+    subp.add_argument('--last-revision-log', '-l', 
+                      required=False,
+                      help="""An optional revision id for the log range. 
+                              Log starts with the build tag.
+                              Default is the last log in the "logs" directory. 
+                              If the last log starts with the current build tag
+                              the log is created from the previous log 
+                              (build recreated). If there is no log and the 
+                              argument is not set no log is created.""")
+    subp.set_defaults(func=build)
 
 if __name__ == "__main__":
     sys.exit(main())
