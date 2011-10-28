@@ -784,7 +784,7 @@ def build(args):
     profile = {}
     profile.update(build_config.get("default_profile", {}))
     target_profile = build_config.get("profiles", {}).get(args.profile, None)
-    if not target_profile:
+    if target_profile == None:
         print "Abort.\nProfile %s not found in config." % args.profile
         return
 
@@ -952,7 +952,9 @@ def build(args):
             
 def setup_subparser(subparsers, config):
     subp = subparsers.add_parser('build', help="Build Dragonfly.")
-    subp.add_argument('profile', 
+    subp.add_argument('profile',
+                      nargs="?",
+                      default="default", 
                       help="""The profile to build. The profile is
                               defined in the config file.""")
     subp.add_argument('--revision', '-r', 
