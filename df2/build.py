@@ -827,8 +827,7 @@ def build(args):
     if profile.get("translate"):
         dirvars["exclude_uistrings"] = True
     
-    export(src, dest, 
-           process_directives=True,
+    export(src, dest,
            exclude_dirs=profile.get("copy_blacklist"),
            keywords={"$dfversion$": args.revision, "$revdate$": revision_name},
            directive_vars=dirvars)
@@ -863,7 +862,7 @@ def build(args):
                 client_lang_files.append((item, match.group(1)))
 
     if profile.get("create_zips"):
-        zip_dir = os.path.abspath(profile.get("zips"))
+        zip_dir = os.path.abspath(os.path.normpath(profile.get("zips")))
         zip_target = os.path.join(zip_dir, "%s.%s" % (rev, short_hash))
         if not os.path.isdir(zip_target):
             os.makedirs(zip_target)
@@ -901,9 +900,7 @@ def build(args):
     if profile.get("create_manifests"):
         try:
             root = profile.get("manifest_root").encode("utf-8")
-            create_manifests(dest.encode("utf-8"),
-                             domain_token=root,
-                             tag=args.tag)
+            create_manifests(dest.encode("utf-8"), domain_token=root, tag=args.tag)
             print "App cache manifests created."
         except:
             print "Abort. Could not create the manifest files."
@@ -923,8 +920,8 @@ def build(args):
                            key=lambda item: item[1])
             last_log = logs and logs[-1][0] or None
 
-            if last_log == log_name and len(logs) > 1:
-                last_log = logs[-2][0]
+            if last_log == log_name:
+                last_log = logs[-2][0] if len(logs) > 1 else ""
             
             if last_log:
                 start_rev = last_log.split(".")[1]
