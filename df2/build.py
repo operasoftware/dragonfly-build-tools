@@ -9,6 +9,7 @@ import base64
 import StringIO
 import urllib
 import subprocess
+from createmanifests import create_manifests
 
 """
 uglifyjs is a python wrapper for uglifyjs.
@@ -45,7 +46,7 @@ _re_script = re.compile("\s?<script +src=\"(?P<src>[^\"]*)\"")
 _re_css = re.compile("\s?<link +rel=\"stylesheet\" +href=\"(?P<href>[^\"]*)\"/>")
 _re_condition = re.compile("\s+if\s+(not)? (.*)")
 _re_client_lang_file = re.compile("^client-([a-zA-Z\-]{2,5})\.xml$")
-_re_linked_source = re.compile(r"(?:src|href)\s*=\s*(\"[^\"]*\"|'[^']*')")
+_re_linked_source = re.compile(r"(?:src|href)\s*=\s*\"([^\"]*)\"|'([^']*)'")
 
 _concatcomment =u"""
 /* dfbuild: concatenated from: %s */
@@ -244,12 +245,16 @@ def _is_utf8(path):
     f = open(path, "rb")
     return "test-scripts" in path and True or f.read(3) == codecs.BOM_UTF8
     
-def _minify_buildout(src, blacklist):
+def _minify_buildout(src, blacklist=[]):
     """
     Run minification on all javascript files in directory src. Minification
     is done in-place, so the original file is replaced with the minified one.
     """
     for base, dirs, files in os.walk(src):
+        bl = [d for d in dirs if d in blacklist]
+        while bl:
+            dirs.pop(dirs.index(bl.pop()))
+
         for file in [f for f in files if f.endswith(".js")]:
             abs = os.path.join(base, file)
             jsminify.minify_in_place(abs)
@@ -522,12 +527,15 @@ def make_build_archive(src, dest_dir, file_name):
     dest = os.path.join(dest_dir, file_name.replace(".xml", ".zip"))
     z = zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED)
     files = [file_name]
-    
+
     with open(os.path.join(src, file_name), 'r') as f:
         content = f.read()
         for match in _re_linked_source.finditer(content):
-            path = match.group(1).strip("\"'")
-            if path.endswith(".css") or path.endswith(".js"):
+            path = match.group(1) or match.group(2)
+            ext = path
+            if not ext.startswith('.'):
+                empty, ext = os.path.split(path)
+            if ext in [".css", ".js"]:
                 files.append(os.path.normpath(path))
 
     for path in files:
@@ -779,10 +787,9 @@ def build(args):
     if not target_profile:
         print "Abort.\nProfile %s not found in config." % args.profile
         return
-    
-    # print "target_profile", target_profile
+
     profile.update(target_profile)
-    # print profile
+
     out, err = cmd_call('hg', 'up', args.tag)
     if err:
         print "Abort.\n", err
@@ -817,17 +824,8 @@ def build(args):
                                        profile.get("name"),
                                        args.tag)
     dirvars = {}
-    
-
     if profile.get("translate"):
         dirvars["exclude_uistrings"] = True
-
-    """
-    if options.set_base:
-        path_segs = os.path.normpath(dst).split(os.sep)
-        pos = path_segs.index(options.set_base)
-        dirvars["base_url"] = pos > -1 and "/%s/" % "/".join(path_segs[pos:]) or ""
-    """
     
     export(src, dest, 
            process_directives=True,
@@ -857,66 +855,103 @@ def build(args):
         _add_license(dest)
         print "License added."
 
-    AUTHORS = os.path.join(src, '..', 'AUTHORS')
-    if os.path.isfile(AUTHORS):
-        shutil.copy(AUTHORS, os.path.join(dest, 'AUTHORS'))
-    
-    
+    client_lang_files = []
+    for item in os.listdir(dest):
+        if os.path.isfile(os.path.join(dest, item)):
+            match = _re_client_lang_file.match(item)
+            if match:
+                client_lang_files.append((item, match.group(1)))
+
     if profile.get("create_zips"):
         zip_dir = os.path.abspath(profile.get("zips"))
         zip_target = os.path.join(zip_dir, "%s.%s" % (rev, short_hash))
         if not os.path.isdir(zip_target):
             os.makedirs(zip_target)
 
-        for item in os.listdir(dest):
-            if os.path.isfile(os.path.join(dest, item)):
-                match = _re_client_lang_file.match(item)
-                if match:
-                    make_build_archive(dest, zip_target, match.group(0))
-                    print "Build for %s zipped." % match.group(1)
+        for name, lang in client_lang_files:
+            make_build_archive(dest, zip_target, name)
+            print "Build for %s zipped." % lang
 
-    """
-    src = os.path.abspath(src)
-    z = zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED)
+    if profile.get("base_root_dir"):
+        path_segs = dest.split(os.path.sep)
+        pos = path_segs.index(profile.get("base_root_dir"))
+        if pos > -1:
+            base_url = "/%s/" % "/".join(path_segs[pos:])
+            base_url_tag = (_base_url % base_url).strip().encode("utf-8")
+            cmd_base_url = "<!-- command set_rel_base_url -->"
     
-    if in_subdir:
-        subdir = os.path.basename(dst)
-        subdir = subdir[:subdir.rfind(".")]
-        subdir = subdir + "/"
+            for name, lang in client_lang_files:
+                path = os.path.join(dest, name)
+                content = ""
+                with open(path, 'rb') as f:
+                    content = f.read()
+                if content:
+                    with open(path, 'wb') as f:
+                        f.write(content.replace(cmd_base_url, base_url_tag, 1))
+                else:
+                    print "Abort. Could not set base URL in %s." % name
+                    return
+        
+            print "Base URLs set."
+
+        else:
+            print "Abort. Could not set the base URLs."
+            return
+
+    if profile.get("create_manifests"):
+        try:
+            root = profile.get("manifest_root").encode("utf-8")
+            create_manifests(dest.encode("utf-8"),
+                             domain_token=root,
+                             tag=args.tag)
+            print "App cache manifests created."
+        except:
+            print "Abort. Could not create the manifest files."
+            return
+
+    if profile.get("create_log"):
+        log_dir = os.path.abspath(os.path.normpath(profile.get("logs")))
+        start_rev = args.last_revision_log
+        log_name = "%s.%s.log" % (rev, short_hash)
+
+        if not os.path.isdir(log_dir): 
+            os.makedirs(log_dir)
+        
+        if not start_rev:
+            logs = sorted([(l, int(os.stat(os.path.join(log_dir, l)).st_mtime))
+                           for l in os.listdir(log_dir)],
+                           key=lambda item: item[1])
+            last_log = logs and logs[-1][0] or None
+
+            if last_log == log_name and len(logs) > 1:
+                last_log = logs[-2][0]
+            
+            if last_log:
+                start_rev = last_log.split(".")[1]
+
+        if start_rev:
+            out, err = cmd_call("hg", "log", 
+                                "-r", "%s:%s" % (args.tag, start_rev), 
+                                "--style", "changelog")
+            if err:
+                print "Could not create a log.\n", err
+
+            with open(os.path.join(log_dir, log_name), "w") as f:
+                f.write(out)
+                print "Log %s created." % log_name
+        else:
+            print "Not possible to find a start revision.",
+            print "Provide one with the -l flag."
+
+    AUTHORS = os.path.join(src, '..', 'AUTHORS')
+    if os.path.isfile(AUTHORS):
+        shutil.copy(AUTHORS, os.path.join(dest, 'AUTHORS'))
+    
+    out, err = cmd_call('hg', 'up', 'tip')
+    if err:
+        print "Could not update to tip.\n", err
     else:
-        subdir=""
-    
-    for base, dirs, files in os.walk(src):
-        for file in files:
-            abs = os.path.join(base, file)
-            rel = subdir + os.path.join(base, file)[len(src)+1:]
-            z.write(abs, rel)
-
-    z.close()
-    """
-
-    """
-    print "make build, revision:", revision
-
-    try:
-        sys.argv = \
-        [
-            __file__,
-            os.path.join(root, 'src'),
-            type["local-repo"],
-            '-t',
-            '-s',
-            '-d',
-            '-m',
-            '-b', 'app',
-            '-k', '$dfversion$=' + type['name'],
-            '-k', '$revdate$=' + revision
-        ]
-        dfbuild.main()
-    except Exception, msg:
-        print "abort. making build failed. ", msg
-        return
-    """
+        print "Updated repository to tip."
             
 def setup_subparser(subparsers, config):
     subp = subparsers.add_parser('build', help="Build Dragonfly.")
@@ -934,6 +969,7 @@ def setup_subparser(subparsers, config):
                               Default is "tip".""")
     subp.add_argument('--last-revision-log', '-l', 
                       required=False,
+                      default=None,
                       help="""An optional revision id for the log range. 
                               Log starts with the build tag.
                               Default is the last log in the "logs" directory. 
