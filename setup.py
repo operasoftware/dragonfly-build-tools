@@ -5,7 +5,8 @@ setup_args = dict(name='df2',
                   author='Christian Krebs',
                   author_email='chrisk@opera.com',
                   description='Tools for Opera Dragonfly development.',
-                  data_files=[('df2', ['df2/DEFAULTS'])],
+                  data_files=[('df2', ['df2/DEFAULTS',
+                                       'df2/README_BUILD'])],
                   packages=['df2'],
                   zip_safe=False)
 

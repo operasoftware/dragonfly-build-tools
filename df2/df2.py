@@ -11,7 +11,14 @@ import build
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-
+def deep_update(target, src):
+	for key in src.keys():
+		if type(src[key]) == type({}):
+			if not key in target:
+				target[key] = {}
+			deep_update(target[key], src[key])
+		else:
+			target[key] = src[key]
 
 def get_config():
 	config = {}
@@ -23,18 +30,17 @@ def get_config():
 			path = os.path.abspath(os.path.join(home, name))
 			if os.path.isfile(path):
 				with open(path, "r") as f:
-					user_config = json.loads(f.read())
-					for section in user_config:
-						config.get(section, {}).update(user_config.get(section))
+					deep_update(config, json.loads(f.read()))
 				break
 	return config
 	
 def main():
+	description = """Tool collection to build Opera Dragonfly and handle 
+	language strings. The tool uses an optional configuration file in the home 
+	directory ("df2.ini", ".df2", "DF2" or "df2.cfg"). Use 'df2 configformat' 
+	to see all options."""
 
-	parser = argparse.ArgumentParser(prog='df2',
-	                                 description='''Tool collection to build
-	                                                Opera Dragonfly and handle  
-	                                                language strings.''')
+	parser = argparse.ArgumentParser(prog='df2', description=description)
 	config=get_config()
 	#print config.get("build").get("default_profile")
 	parser.set_defaults(config=config)

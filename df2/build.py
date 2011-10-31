@@ -779,20 +779,27 @@ def cmd_call(*args):
                             stdin=subprocess.PIPE,
                             stderr=subprocess.PIPE).communicate()
 
+def fix_bom(args):
+    bad = _get_bad_encoding_files(args.src)
+    for path in bad:
+        _ansi2utf8(path)
+        print "BOM fixed for \"%s.\"" % path 
+    return 0
+
 def build(args):
     build_config = args.config.get("build", {})
     profile = {}
     profile.update(build_config.get("default_profile", {}))
     target_profile = build_config.get("profiles", {}).get(args.profile, None)
     if target_profile == None:
-        print "Abort.\nProfile %s not found in config." % args.profile
+        print "abort. profile \"%s\" not found in config." % args.profile
         return
 
     profile.update(target_profile)
 
     out, err = cmd_call('hg', 'up', args.tag)
     if err:
-        print "Abort.\n", err
+        print "abort.", err
         return
 
     print out.strip()
@@ -800,23 +807,31 @@ def build(args):
                         "-r", args.tag, 
                         "--template", "{rev}:{node|short}")
     if err:
-        print "Abort.\n", err
+        print "abort.", err
         return
 
-    print "Updated to revision: ", out.strip()
+    print "updated to revision: ", out.strip()
     rev, short_hash = out.strip().split(":", 1)
     src = profile.get("src", None)
     dest = profile.get("dest", None)
     if not (src and dest):
-        print "Abort.\nMissing \"src\" or \"dest\" in the profile."
+        print "abort. missing \"src\" or \"dest\" in the profile."
         return
     
     src = os.path.abspath(os.path.normpath(src))
     dest = os.path.abspath(os.path.normpath(dest))
 
+    if profile.get("verify_bom"):
+        bad = _get_bad_encoding_files(src)
+        if bad:
+            print "abort.",
+            print "the following files do not seem to be UTF8 with BOM encoded:"
+            for b in bad: print "\t%s" % b
+            return
+
     if os.path.isdir(dest) and not profile.get("force_overwrite"):
-        print "Abort."
-        print "Destination exists! Set \"force_overwrite\" in the config file."
+        print "abort.",
+        print "destination exists! Set \"force_overwrite\" in the config file."
         return
     
     revision_name = "%s:%s, %s, %s" % (rev,
@@ -831,28 +846,28 @@ def build(args):
            exclude_dirs=profile.get("copy_blacklist"),
            keywords={"$dfversion$": args.revision, "$revdate$": revision_name},
            directive_vars=dirvars)
-    print "Build exported."
+    print "build exported."
 
     if profile.get("translate"):
         _localize_buildout(dest,
                            os.path.join(src, "ui-strings"),
                            profile.get("minify"))
-        print "Build translated."
+        print "build translated."
 
     if profile.get("make_data_uris"):
         _convert_imgs_to_data_uris(dest)
         # any remaining image in ui-images is not used
         img_dir = os.path.join(dest, 'ui-images')
         shutil.rmtree(img_dir)
-        print "Data URIs created."
+        print "data URIs created."
 
     if profile.get("minify"):
         _minify_buildout(dest, profile.get("minify_blacklist"))
-        print "Builds minified."
+        print "builds minified."
 
     if profile.get("license"):
         _add_license(dest)
-        print "License added."
+        print "license added."
 
     client_lang_files = []
     for item in os.listdir(dest):
@@ -869,7 +884,7 @@ def build(args):
 
         for name, lang in client_lang_files:
             make_build_archive(dest, zip_target, name)
-            print "Build for %s zipped." % lang
+            print "build for %s zipped." % lang
 
     if profile.get("base_root_dir"):
         path_segs = dest.split(os.path.sep)
@@ -888,22 +903,22 @@ def build(args):
                     with open(path, 'wb') as f:
                         f.write(content.replace(cmd_base_url, base_url_tag, 1))
                 else:
-                    print "Abort. Could not set base URL in %s." % name
+                    print "abort. could not set base URL in %s." % name
                     return
         
-            print "Base URLs set."
+            print "base URLs set."
 
         else:
-            print "Abort. Could not set the base URLs."
+            print "abort. could not set the base URLs."
             return
 
     if profile.get("create_manifests"):
         try:
             root = profile.get("manifest_root").encode("utf-8")
             create_manifests(dest.encode("utf-8"), domain_token=root, tag=args.tag)
-            print "App cache manifests created."
+            print "app cache manifests created."
         except:
-            print "Abort. Could not create the manifest files."
+            print "abort. could not create the manifest files."
             return
 
     if profile.get("create_log"):
@@ -931,14 +946,14 @@ def build(args):
                                 "-r", "%s:%s" % (args.tag, start_rev), 
                                 "--style", "changelog")
             if err:
-                print "Could not create a log.\n", err
+                print "could not create a log.\n", err
 
             with open(os.path.join(log_dir, log_name), "w") as f:
                 f.write(out)
-                print "Log %s created." % log_name
+                print "log %s created." % log_name
         else:
-            print "Not possible to find a start revision.",
-            print "Provide one with the -l flag."
+            print "not possible to find a start revision.",
+            print "provide a start revision with the -l flag."
 
     AUTHORS = os.path.join(src, '..', 'AUTHORS')
     if os.path.isfile(AUTHORS):
@@ -946,9 +961,9 @@ def build(args):
     
     out, err = cmd_call('hg', 'up', 'tip')
     if err:
-        print "Could not update to tip.\n", err
+        print "could not update to tip.\n", err
     else:
-        print "Updated repository to tip."
+        print "updated repository to tip."
             
 def setup_subparser(subparsers, config):
     subp = subparsers.add_parser('build', help="Build Dragonfly.")
@@ -977,6 +992,10 @@ def setup_subparser(subparsers, config):
                               (build recreated). If there is no log and the 
                               argument is not set no log is created.""")
     subp.set_defaults(func=build)
+
+    subp = subparsers.add_parser('fixBOM', help="Add a BOM in all JS source files.")
+    subp.add_argument('src', help="""The source path.""")
+    subp.set_defaults(func=fix_bom)
 
 if __name__ == "__main__":
     sys.exit(main())

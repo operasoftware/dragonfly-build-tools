@@ -19,6 +19,7 @@
 			                   "lib",
 			                   "resource-manager",
 			                   "syntaxhighlight"],
+			"verify_bom": true,
 			"make_data_uris": true,
 			"license": true,
 			"force_overwrite": true,
