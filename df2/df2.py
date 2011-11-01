@@ -44,6 +44,7 @@ def main():
 	config=get_config()
 	#print config.get("build").get("default_profile")
 	parser.set_defaults(config=config)
+	parser.set_defaults(root_path=SOURCE_ROOT)
 	subparsers = parser.add_subparsers()
 	g = globals()
 	for name in g:
