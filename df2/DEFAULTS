@@ -8,7 +8,8 @@
 	},
 	"build": {
 		"default_profile": {
-			"name": "-",
+			"name": "",
+			"alias": [],
 			"src": "src",
 			"dest": "build",
 			"copy_blacklist": ["scripts",

@@ -16,9 +16,13 @@
 		  */
 		"default_profile": {
 			/**
-			  * The name of a profile. Used with 'df2 build <name>'.
+			  * The name of a profile. Displayed as part of the revision label.
 			  */
 			"name": "",
+			/**
+			  * List of aliases for the profile.
+			  */
+			"alias": [],
 			/**
 			  * The source path for the build.
 			  */

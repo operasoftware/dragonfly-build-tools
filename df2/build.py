@@ -46,7 +46,7 @@ _re_script = re.compile("\s?<script +src=\"(?P<src>[^\"]*)\"")
 _re_css = re.compile("\s?<link +rel=\"stylesheet\" +href=\"(?P<href>[^\"]*)\"/>")
 _re_condition = re.compile("\s+if\s+(not)? (.*)")
 _re_client_lang_file = re.compile("^client-([a-zA-Z\-]{2,5})\.xml$")
-_re_linked_source = re.compile(r"(?:src|href)\s*=\s*\"([^\"]*)\"|'([^']*)'")
+_re_linked_source = re.compile(r"(?:src|href)\s*=\s*(?:\"([^\"]*)\"|'([^']*)')")
 
 _concatcomment =u"""
 /* dfbuild: concatenated from: %s */
@@ -531,12 +531,12 @@ def make_build_archive(src, dest_dir, file_name):
     with open(os.path.join(src, file_name), 'r') as f:
         content = f.read()
         for match in _re_linked_source.finditer(content):
-            path = match.group(1) or match.group(2)
+            path = os.path.normpath(match.group(1) or match.group(2))
             ext = path
             if not ext.startswith('.'):
-                empty, ext = os.path.split(path)
+                empty, ext = os.path.splitext(path)
             if ext in [".css", ".js"]:
-                files.append(os.path.normpath(path))
+                files.append(path)
 
     for path in files:
         z.write(os.path.join(src, path), path)
@@ -786,11 +786,21 @@ def fix_bom(args):
         print "BOM fixed for \"%s.\"" % path 
     return 0
 
+def _get_profile(profiles, name):
+    for p in profiles:
+        if p == name:
+            return profiles[p]
+        for alias in profiles[p].get("alias", []):
+            if alias == name:
+                return profiles[p]
+    return None
+
 def build(args):
     build_config = args.config.get("build", {})
     profile = {}
     profile.update(build_config.get("default_profile", {}))
-    target_profile = build_config.get("profiles", {}).get(args.profile, None)
+    target_profile = _get_profile(build_config.get("profiles", {}),
+                                  args.profile)
     if target_profile == None:
         print "abort. profile \"%s\" not found in config." % args.profile
         return
@@ -890,7 +900,7 @@ def build(args):
         path_segs = dest.split(os.path.sep)
         pos = path_segs.index(profile.get("base_root_dir"))
         if pos > -1:
-            base_url = "/%s/" % "/".join(path_segs[pos:])
+            base_url = "/%s/" % "/".join(path_segs[pos + 1:])
             base_url_tag = (_base_url % base_url).strip().encode("utf-8")
             cmd_base_url = "<!-- command set_rel_base_url -->"
     
