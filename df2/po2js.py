@@ -37,7 +37,7 @@ class StringEscapeError(Exception):
 
 class StringPlaceholderError(Exception):
 	def __init__(self, path, value):
-		self.value = path + '\n' + value
+		self.value = path + "\n" + value
 	def __str__(self):
 		return self.value
 
@@ -65,7 +65,6 @@ msgstr "de"
 
 RE_LANG_NAME = re.compile(r"msgid \"<LanguageName>\"\s*msgstr (\"[^\"]*\")\s*")
 RE_LANG_CODE = re.compile(r"msgid \"<LanguageCode>\"\s*msgstr (\"[^\"]*\")\s*")
-
 RE_STR = re.compile(r"".join([
          r"(?:#\..*\s*)*",
          r"#:\s([^:]+):\d+\s*",
@@ -74,20 +73,16 @@ RE_STR = re.compile(r"".join([
          r"msgid\s*((?:\"(?:.(?!\"[\r\n]))*.?\"\s+)+)",
          r"msgstr\s*((?:\"(?:.(?!\"[\r\n]))*.?\"\s+)+)",
          ]))
-
 RE_SCOPE = re.compile(r"#\.\s*Scope:(?:.(?!dragonfly))*.dragonfly")
-
 RE_PLACEHOLDERS = re.compile(r"(%(?:\([^\)]*\))?s)")
 RE_LINEBREAK = re.compile(r"\"[\r\n]+\"")
 RE_STR_CHECK = re.compile(r"(\"(?:[^\\\"]|\\.)*\")")
+RE_ENG_JS_STR = re.compile(r"ui_strings\.([A-Z0-9_]*)")
 
 LANG = 1
-SCOPE = 1
 ID = 1
-MSGCTXT = 2
 MSGID = 3
 MSGSTR = 4
-STR_CHECK = 5
 
 class JSWriter(object):
 	def __init__(self, id_list=[]):
@@ -121,7 +116,6 @@ class PoWriter(object):
 		return "".join(self._out)
 
 def get_ids_from_js(js_file):
-	RE_ENG_JS_STR = re.compile(r"ui_strings\.([A-Z0-9_]*)")
 	return [match.group(ID) for match in RE_ENG_JS_STR.finditer(js_file.read())]
 
 def check_placeholders(src_str, dest_str):
@@ -158,7 +152,7 @@ def command_po2(args, writer_class, f_name_tmpl, id_list=None):
 	if not os.path.exists(dest): 
 		os.makedirs(dest)
 
-	langs = args.config.get('po2js', {}).get('langs', [])
+	langs = args.config.get("po2js", {}).get("langs", [])
 
 	for root, dirs, files in os.walk(src):
 		absroot = os.path.abspath(root)
@@ -188,21 +182,21 @@ def command_po2po(args):
 	command_po2(args, PoWriter, "%s.po", args.id_list)
 						
 def setup_subparser(subparsers, config):
-	subp = subparsers.add_parser('po2js', help="Covert .po files to .js files.")
-	subp.add_argument('src', 
+	subp = subparsers.add_parser("po2js", help="Covert .po files to .js files.")
+	subp.add_argument("src", 
 	                  help="The source directory, typically core/translations.")
-	subp.add_argument('dest', help="The destination directory.")
-	subp.add_argument('ref', 
-	                  nargs='?',
-	                  type=argparse.FileType('rb', 0),
-	                  help='''Optional path to a .js file to check the
-	                          completeness of the strings.''')
+	subp.add_argument("dest", help="The destination directory.")
+	subp.add_argument("ref", 
+	                  nargs="?",
+	                  type=argparse.FileType("rb", 0),
+	                  help="""Optional path to a .js file to check the
+	                          completeness of the strings.""")
 	subp.set_defaults(func=command_po2js)
 
 
-	subp = subparsers.add_parser('po2po', help="Filter po files by a set of IDs.")
-	subp.add_argument('src', 
+	subp = subparsers.add_parser("po2po", help="Filter po files by a set of IDs.")
+	subp.add_argument("src", 
 	                  help="The source directory, typically core/translations.")
-	subp.add_argument('dest', help="The destination directory.")
-	subp.add_argument('id_list', nargs='*', help="Any number of IDs")
+	subp.add_argument("dest", help="The destination directory.")
+	subp.add_argument("id_list", nargs="*", help="Any number of IDs")
 	subp.set_defaults(func=command_po2po)

@@ -18,7 +18,7 @@ def js2db(args):
 	RE_STR = re.compile(r"".join([
 	         r"/\*\s*DESC:\s*((?:[^\*]|\*(?!/))*)\*/",
 	         r"\s*ui_strings\.([^ =]*)\s*=",
-	         r"\s*(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')\s*;?\s*",
+	         r"\s*(\"(?:[^\"\\]|\\.)*\"|"(?:[^"\\]|\\.)*")\s*;?\s*",
 	         ]))
 
 	out = []
@@ -29,7 +29,7 @@ def js2db(args):
 	DESCRIPTION = 1
 	for match in RE_STR.finditer(content):
 		ident = match.group(IDENTIFIER)
-		caption = match.group(CAPTION).replace("'", '"').replace('\\"', '"')
+		caption = match.group(CAPTION).replace(""", """).replace("\\"", """)
 		out.append("%s=-1" % ident)
 		out.append("%s.caption=%s" % (ident, caption))
 		out.append("%s.scope=\"dragonfly\"" % ident)
@@ -42,13 +42,10 @@ def js2db(args):
 	args.dest.write("\n".join(out))
 
 def setup_subparser(subparsers, config):
-	subp = subparsers.add_parser('js2db', 
-	                             help='''Create an .db file from an .js file.''')
-	subp.add_argument('src',
-	                  type=argparse.FileType('rb', 0),
-	                  help='''The source file, typically 
-	                          src/ui-strings/ui_strings-en.js''')
-	subp.add_argument('dest',
-	                  type=argparse.FileType('wb', 0),
-	                  help='src help')
+	subp = subparsers.add_parser("js2db", help="Create an .db file from an .js file.")
+	subp.add_argument("src", type=argparse.FileType("rb", 0),
+	                         help="""The source file, typically 
+	                                 src/ui-strings/ui_strings-en.js.""")
+	subp.add_argument("dest", type=argparse.FileType("wb", 0),
+	                          help="the destination file.")
 	subp.set_defaults(func=js2db)

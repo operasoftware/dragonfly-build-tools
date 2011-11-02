@@ -62,25 +62,13 @@ def db2js(args):
 		out.append((match.group("DESC").strip(" \""),
 		            match.group("ID"),
 		            RE_ESC_QUOTES.sub(r"\"", match.group("CAPTION"))))
-		"""
-		out.append(ENTRY % (match.group("DESC").strip(" \""),
-		                    match.group("ID"),
-		                    RE_ESC_QUOTES.sub(r"\"", match.group("CAPTION"))))
-		"""
 	out.sort(key=lambda entry: entry[1])
 	args.dest.write(HEAD)
 	args.dest.write("\n".join([ENTRY % entry for entry in out]))
 
 def setup_subparser(subparsers, config):
-	subp = subparsers.add_parser('db2js', 
-	                                     help='''Create an .js file from an 
-	                                     .db file.''')
-	subp.add_argument('src',
-	                          type=argparse.FileType('rb', 0),
-	                          help='''The source file, typically
-	                          english.db file.''')
-	subp.add_argument('dest',
-	                          type=argparse.FileType('wb', 0),
-	                          help='src help')
-
+	subp = subparsers.add_parser("db2js", help="""Create an .js file from a .db file.""")
+	subp.add_argument("src", type=argparse.FileType("rb", 0),
+	                         help="""The source file, typically english.db file.""")
+	subp.add_argument("dest", type=argparse.FileType("wb", 0), help="the destination file.")
 	subp.set_defaults(func=db2js)
