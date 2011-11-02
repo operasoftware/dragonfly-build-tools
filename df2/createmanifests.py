@@ -91,11 +91,14 @@ def create_manifests(path, domain_token=None, tag=""):
             resources = [web_path + "/" + name, web_path + "/AUTHORS"]
             manifest = "dragonfly-%s.manifest" % match.group("lang")
             if web_path.startswith("/app"):
-                if "cutting-edge" in web_path:
+                web_path_parts = web_path.split("/")
+                if "cutting-edge" in web_path_parts:
                     resources.append("/app/cutting-edge/")
-                elif "experimental" in web_path:
+                elif "experimental" in web_path_parts:
                     resources.append("/app/experimental/")
-                else:
+                elif "profiler" in web_path_parts:
+                    resources.append("/app/profiler/")
+                elif "stp-1" == web_path_parts[-1]:
                     resources.append("/app/")
             resources.extend(get_resources(path, web_path, name))
             write_maifest(path, manifest, resources, tag)

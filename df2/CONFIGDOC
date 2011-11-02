@@ -97,9 +97,13 @@
 			  */
 			"create_manifests": false,
 			/**
-			  * The repository name which represents the server root.
+			  * Setting to specify if a base uri tag should be set.
 			  */
-			"manifest_root": "",
+			"set_base_uri": false,
+			/**
+			  * The directory name which represents the server root.
+			  */
+			"local_domain_dir_name": "",
 			/**
 			  * The repository name which represents the server root.
 			  * If set a base tag will be added to the XML files. The href

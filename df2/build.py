@@ -896,9 +896,9 @@ def build(args):
             make_build_archive(dest, zip_target, name)
             print "build for %s zipped." % lang
 
-    if profile.get("base_root_dir"):
+    if profile.get("set_base_uri"):
         path_segs = dest.split(os.path.sep)
-        pos = path_segs.index(profile.get("base_root_dir"))
+        pos = path_segs.index(profile.get("local_domain_dir_name"))
         if pos > -1:
             base_url = "/%s/" % "/".join(path_segs[pos + 1:])
             base_url_tag = (_base_url % base_url).strip().encode("utf-8")
@@ -924,7 +924,7 @@ def build(args):
 
     if profile.get("create_manifests"):
         try:
-            root = profile.get("manifest_root").encode("utf-8")
+            root = profile.get("local_domain_dir_name").encode("utf-8")
             create_manifests(dest.encode("utf-8"), domain_token=root, tag=args.tag)
             print "app cache manifests created."
         except:

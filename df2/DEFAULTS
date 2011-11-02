@@ -31,25 +31,12 @@
 			"translate": false,
 			"minify": false,
 			"minify_blacklist": [],
+			"local_domain_dir_name": "",
 			"create_manifests": false,
-			"base_root_dir": "",
-			"manifest_root": ""
+			"set_base_uri": false
 		},
 		"profiles": {
-			"default": {},
-			"test": {
-				"name": "test-build",
-				"src": "src",
-				"dest": "test-build",
-				"logs": "test-build/logs",
-				"create_log": true,
-				"zips": "test-build/zips",
-				"create_zips": true,
-				"translate": true,
-				"minify": true,
-				"create_manifests": true,
-				"manifest_root": "test-build"
-			}
+			"default": {}
 		}
 	}
 }
