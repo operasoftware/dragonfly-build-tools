@@ -1,7 +1,7 @@
 {
 	"po2js": {
 		/**
-		  * Used by 'df2 po2js'. JS file will only be created for the languages
+		  * Used by 'df2 po2js'. JS files will only be created for the languages
 		  * defined here. The default list is:
 		  */
 		"langs": ["be", "bg", "cs", "da", "de", "el", "en-GB", "es-ES", "es-LA", 
@@ -54,7 +54,7 @@
 			  */
 			"make_data_uris": true,
 			/**
-			  * Setting to specify if the license should be included e in the 
+			  * Setting to specify if the license should be included in the 
 			  * destination files.
 			  */
 			"license": true,
@@ -103,15 +103,7 @@
 			/**
 			  * The directory name which represents the server root.
 			  */
-			"local_domain_dir_name": "",
-			/**
-			  * The repository name which represents the server root.
-			  * If set a base tag will be added to the XML files. The href
-			  * attribute will be set to the difference of the actual location
-			  * of the file to the specified value. This is to handle rewrites 
-			  * on the server.
-			  */
-			"base_root_dir": ""
+			"local_domain_dir_name": ""
 		},
 		"profiles": {
 			/**
