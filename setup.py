@@ -1,8 +1,8 @@
 
 setup_args = dict(name='df2',
                   version='0.1',
-                  url='https://bitbucket.org/scope/dragonfly-stp-1/',
-                  author='Christian Krebs',
+                  url='https://bitbucket.org/scope/dragonfly-tools/',
+                  author='Christian Krebs, Rune Halvorsen',
                   author_email='chrisk@opera.com',
                   description='Tools for Opera Dragonfly development.',
                   data_files=[('df2', ['df2/DEFAULTS',
