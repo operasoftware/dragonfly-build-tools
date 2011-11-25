@@ -47,6 +47,10 @@ _re_css = re.compile("\s?<link +rel=\"stylesheet\" +href=\"(?P<href>[^\"]*)\"/>"
 _re_condition = re.compile("\s+if\s+(not)? (.*)")
 _re_client_lang_file = re.compile("^client-([a-zA-Z\-]{2,5})\.xml$")
 _re_linked_source = re.compile(r"(?:src|href)\s*=\s*(?:\"([^\"]*)\"|'([^']*)')")
+_re_strict = re.compile(r"(\"|')use strict\1;?\s*")
+
+def _remove_strict(content):
+  return _re_strict.sub("", content, count=1)
 
 _concatcomment =u"""
 /* dfbuild: concatenated from: %s */
@@ -152,7 +156,7 @@ def _process_directives(root, filepath, vars):
         for infile in contentfiles:
             fout.write(_concatcomment % infile)
             fin = codecs.open(os.path.join(root, infile), "r", encoding="utf_8_sig")
-            fout.write(fin.read())
+            fout.write(_remove_strict(fin.read()))
             fin.close()
             os.unlink(os.path.join(root, infile))
         fout.close()
