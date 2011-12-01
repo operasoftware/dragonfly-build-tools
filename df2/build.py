@@ -900,6 +900,12 @@ def build(args):
             make_build_archive(dest, zip_target, name)
             print "build for %s zipped." % lang
 
+        if profile.get("copy_zips_to_latest"):
+            latest = os.path.join(zip_dir, "latest")
+            if os.path.exists(latest):
+                shutil.rmtree(latest)
+            shutil.copytree(zip_target, latest)
+
     if profile.get("set_base_uri"):
         path_segs = dest.split(os.path.sep)
         pos = path_segs.index(profile.get("local_domain_dir_name"))

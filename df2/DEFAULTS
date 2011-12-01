@@ -29,6 +29,7 @@
 			"create_log": false,
 			"zips": "",
 			"create_zips": false,
+			"copy_zips_to_latest": false,
 			"translate": false,
 			"minify": false,
 			"minify_blacklist": [],
