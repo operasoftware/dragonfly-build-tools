@@ -248,20 +248,35 @@ def _is_utf8(path):
     if not os.path.isfile(path): return None
     f = open(path, "rb")
     return "test-scripts" in path and True or f.read(3) == codecs.BOM_UTF8
+
+def _get_all_js_files(src, blacklist=[]):
+    js_files = []
+    for base, dirs, files in os.walk(src):
+        bl = [d for d in dirs if d in blacklist]
+        while bl:
+            dirs.pop(dirs.index(bl.pop()))
+
+        js_files.extend([os.path.join(base, f) for f in files if f.endswith(".js")])
+    
+    return js_files
     
 def _minify_buildout(src, blacklist=[]):
     """
     Run minification on all javascript files in directory src. Minification
     is done in-place, so the original file is replaced with the minified one.
     """
-    for base, dirs, files in os.walk(src):
-        bl = [d for d in dirs if d in blacklist]
-        while bl:
-            dirs.pop(dirs.index(bl.pop()))
+    for f_p in _get_all_js_files(src, blacklist):
+        jsminify.minify_in_place(f_p)
 
-        for file in [f for f in files if f.endswith(".js")]:
-            abs = os.path.join(base, file)
-            jsminify.minify_in_place(abs)
+def _suppress_warnings(src, blacklist=[]):
+    for path in _get_all_js_files(src, blacklist):
+        content = ""
+        with open(path, 'rb') as f:
+            content = f.read()
+        if content:
+            with open(path, 'wb') as f:
+                f.write(content)
+                f.write(";opera.postError=function(){}")
             
 def _localize_buildout(src, langdir, option_minify):
     """Make a localized version of the build dir. That is, with one
@@ -882,6 +897,10 @@ def build(args):
     if profile.get("license"):
         _add_license(dest)
         print "license added."
+
+    if profile.get("suppress_warnings"):
+        _suppress_warnings(dest, profile.get("minify_blacklist"))
+        print "warnings suppressed in build."
 
     client_lang_files = []
     for item in os.listdir(dest):

@@ -35,7 +35,8 @@
 			"minify_blacklist": [],
 			"local_domain_dir_name": "",
 			"create_manifests": false,
-			"set_base_uri": false
+			"set_base_uri": false,
+			"suppress_warnings": false
 		},
 		"profiles": {
 			"default": {}
