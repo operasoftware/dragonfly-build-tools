@@ -988,7 +988,10 @@ def build(args):
                 print "could not create a log.\n", err
 
             with open(os.path.join(log_dir, log_name), "w") as f:
-                f.write(out)
+                if os.name == "nt":
+                    f.write(out.decode("windows-1252").encode("utf-8"))
+                else:
+                    f.write(out)
                 print "log %s created." % log_name
         else:
             print "not possible to find a start revision.",
