@@ -6,7 +6,6 @@ import tempfile
 import sys
 import zipfile
 import base64
-import StringIO
 import urllib
 import subprocess
 from createmanifests import create_manifests
@@ -458,7 +457,7 @@ def _convert_imgs_to_data_uris(src):
         for path in [ os.path.join(base, f) for f in files if f.endswith(".css") ]:
             fp = codecs.open(path, "r", "utf_8_sig")
             dirty = False
-            temp = StringIO.StringIO()
+            temp = tempfile.TemporaryFile()
             for line in fp:
                 match = re_img.findall(line)
                 if match:
@@ -476,21 +475,21 @@ def _convert_imgs_to_data_uris(src):
                             deletions.append(file_path)
                             uri = _data_uri_from_path(file_path)
                         if uri:
-                            temp.write(line.replace(full, uri).encode("ascii"))
+                            temp.write(line.replace(full, uri).encode("utf-8"))
                         else:
                             if not stripped.startswith("data:"):
                                 print "no data uri for path:", os.path.join(base, URI_to_os_path(stripped)) 
-                            temp.write(line.encode("ascii"))
+                            temp.write(line.encode("utf-8"))
                             dirty = True
                 else:
-                    temp.write(line.encode("ascii"))
+                    temp.write(line.encode("utf-8"))
                     dirty = True
 
             if dirty:
                 fp.close()
                 fp = codecs.open(path, "w", encoding="utf_8_sig")
                 temp.seek(0)
-                fp.write(temp.read().encode("utf-8"))
+                fp.write(temp.read().decode("utf-8"))
                 fp.close()
                 
     for path in deletions:
