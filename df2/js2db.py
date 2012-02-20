@@ -29,7 +29,7 @@ def js2db(args):
 	DESCRIPTION = 1
 	for match in RE_STR.finditer(content):
 		ident = match.group(IDENTIFIER)
-		caption = match.group(CAPTION).replace(""", """).replace("\\"", """)
+		caption = match.group(CAPTION).replace("'", '"').replace('\\"', '"')
 		out.append("%s=-1" % ident)
 		out.append("%s.caption=%s" % (ident, caption))
 		out.append("%s.scope=\"dragonfly\"" % ident)
