@@ -3,6 +3,7 @@ import sys
 import argparse
 import json
 import js2db
+import jssort
 import po2js
 import db2js
 import verifyids
