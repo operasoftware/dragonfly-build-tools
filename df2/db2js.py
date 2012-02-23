@@ -23,13 +23,13 @@ S_LITERAL_AGREE.scope="bream"
 C:\docs\git\strings\data\strings\english.db
 """
 
-RE_ENG_DB_STR = re.compile(r"".join([
-                r"(?P<ID>[A-Z0-9_]*)=-1\s*",
-                r"(?:",
-                r"\1\.caption=\"(?P<CAPTION>(?:.(?!\"[\r\n]))*.?)\"\s+|",
-                r"\1\.description=(?P<DESC>\"(?:.(?!\"[\r\n]))*.?\")\s+|",
-                r"\1\.scope=(?:.(?!dragonfly))*.dragonfly[^\r\n]*\s*",
-                r"){3}"
+RE_ENG_DB_STR = re.compile(r''.join([
+                r'(?P<ID>[A-Z0-9_]*)=-1\s*',
+                r'(?:',
+                r'\1\.caption="(?P<CAPTION>(?:.(?!"[\r\n]))*.?)"\s+|',
+                r'\1\.description=(?P<DESC>"(?:.(?!"[\r\n]))*.?")\s+|',
+                r'\1\.scope=(?:.(?!dragonfly))*.dragonfly[^\r\n]*\s*',
+                r'){3}'
                 ]))
 
 HEAD = """window.ui_strings || ( window.ui_strings  = {} );
@@ -59,9 +59,9 @@ def db2js(args):
 	out = []
 	content = args.src.read()
 	for match in RE_ENG_DB_STR.finditer(content):
-		out.append((match.group("DESC").strip(" \""),
+		out.append((match.group("DESC").strip()[1:-1],
 		            match.group("ID"),
-		            RE_ESC_QUOTES.sub("\\\"", match.group("CAPTION"))))
+		            RE_ESC_QUOTES.sub(r'\"', match.group("CAPTION"))))
 	out.sort(key=lambda entry: entry[1])
 	args.dest.write(HEAD)
 	args.dest.write("\n".join([ENTRY % entry for entry in out]))
