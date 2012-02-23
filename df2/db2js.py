@@ -61,7 +61,7 @@ def db2js(args):
 	for match in RE_ENG_DB_STR.finditer(content):
 		out.append((match.group("DESC").strip(" \""),
 		            match.group("ID"),
-		            RE_ESC_QUOTES.sub(r"\"", match.group("CAPTION"))))
+		            RE_ESC_QUOTES.sub("\\\"", match.group("CAPTION"))))
 	out.sort(key=lambda entry: entry[1])
 	args.dest.write(HEAD)
 	args.dest.write("\n".join([ENTRY % entry for entry in out]))
