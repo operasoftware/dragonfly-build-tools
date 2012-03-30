@@ -33,7 +33,7 @@ def js2db(args):
 		out.append("%s=-1" % ident)
 		out.append("%s.caption=%s" % (ident, caption))
 		out.append("%s.scope=\"dragonfly\"" % ident)
-		out.append("%s.description=\"%s\"" % (ident, match.group(DESCRIPTION)))
+		out.append("%s.description=\"%s\"" % (ident, match.group(DESCRIPTION).strip()))
 		if prev_match:
 			if match.start(0) - prev_match.end(0) > 1:
 				raise JSFileParseError(content[prev_match.end(0):match.start(0)])
