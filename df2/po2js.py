@@ -22,6 +22,7 @@ msgstr "en-GB"
 
 #. Scope: momail
 #: S_LITERAL_CANCEL:972784745
+#, python-format
 msgctxt "S_LITERAL_CANCEL"
 msgid ""
 "Opera Dragonfly is waiting for a connection on port %s.\n"
@@ -68,7 +69,7 @@ RE_LANG_CODE = re.compile(r"msgid \"<LanguageCode>\"\s*msgstr (\"[^\"]*\")\s*")
 RE_STR = re.compile(r"".join([
          r"(?:#\..*\s*)*",
          r"#:\s([^:]+):\d+\s*",
-         r"(?:#, (?:c-format|fuzzy)\s*|#\|[^\r\n]*\s*)*",
+         r"(?:#, (?:c-format|fuzzy|python-format)\s*|#\|[^\r\n]*\s*)*",
          r"msgctxt\s*([^\r\n]*)\s*",
          r"msgid\s*((?:\"(?:.(?!\"[\r\n]))*.?\"\s+)+)",
          r"msgstr\s*((?:\"(?:.(?!\"[\r\n]))*.?\"\s+)+)",
