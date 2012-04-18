@@ -168,8 +168,20 @@ def command_po2(args, writer_class, f_name_tmpl, id_list=None):
 					js_file = f_name_tmpl % name[:-3]
 					if ref_ids and not ref_ids == set(ids):
 						ids = set(ids)
-						diff = ref_ids - ids if ref_ids > ids else ids - ref_ids
-						print "Error: Missing %s ids in %s" % (list(diff), name)
+						diff = ref_ids - ids
+						if diff:
+							print "Error: Missing ids in %s\n" % name
+							for i in sorted(list(diff)):
+								if i:
+									print "\t", i
+							print ""
+						diff = ids - ref_ids
+						if diff:
+							print "Warning: Missing ids in %s\n" % args.ref.name
+							for i in sorted(list(diff)):
+								if i:
+									print "\t", i
+							print ""
 					with open(os.path.join(dest, js_file), "wb") as f:
 						f.write(codecs.BOM_UTF8)
 						f.write(writer.get_content())
