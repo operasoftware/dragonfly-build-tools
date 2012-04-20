@@ -192,6 +192,7 @@ def command_po2js(args):
 	command_po2(args, JSWriter, "ui_strings-%s.js")
 
 def command_po2po(args):
+	args.id_list = list(set(get_ids_from_js(args.ref)))
 	command_po2(args, PoWriter, "%s.po", args.id_list)
 						
 def setup_subparser(subparsers, config):
@@ -211,5 +212,9 @@ def setup_subparser(subparsers, config):
 	subp.add_argument("src", 
 	                  help="The source directory, typically core/translations.")
 	subp.add_argument("dest", help="The destination directory.")
-	subp.add_argument("id_list", nargs="*", help="Any number of IDs")
+	subp.add_argument("ref", 
+	                  type=argparse.FileType("rb", 0),
+	                  help="""Path to a file to extract string ids.
+	                          The script searchs with the pattern 
+	                          "ui_strings\.([A-Z0-9_]+)" """)
 	subp.set_defaults(func=command_po2po)
