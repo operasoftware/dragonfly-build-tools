@@ -78,7 +78,7 @@ RE_SCOPE = re.compile(r"#\.\s*Scope:(?:.(?!dragonfly))*.dragonfly")
 RE_PLACEHOLDERS = re.compile(r"(%(?:\([^\)]*\))?s)")
 RE_LINEBREAK = re.compile(r"\"[\r\n]+\"")
 RE_STR_CHECK = re.compile(r"(\"(?:[^\\\"]|\\.)*\")")
-RE_ENG_JS_STR = re.compile(r"ui_strings\.([A-Z0-9_]*)")
+RE_ENG_JS_STR = re.compile(r"ui_strings\.([A-Z0-9_]+)")
 
 LANG = 1
 ID = 1
