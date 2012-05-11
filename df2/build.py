@@ -248,23 +248,24 @@ def _is_utf8(path):
     f = open(path, "rb")
     return "test-scripts" in path and True or f.read(3) == codecs.BOM_UTF8
 
-def _get_all_js_files(src, blacklist=[]):
+def _get_all_js_files(src, whitelist=[]):
     js_files = []
     for base, dirs, files in os.walk(src):
-        bl = [d for d in dirs if d in blacklist]
-        while bl:
-            dirs.pop(dirs.index(bl.pop()))
+        if whitelist:
+            bl = [d for d in dirs if not d in whitelist]
+            while bl:
+                dirs.pop(dirs.index(bl.pop()))
 
         js_files.extend([os.path.join(base, f) for f in files if f.endswith(".js")])
     
     return js_files
     
-def _minify_buildout(src, blacklist=[]):
+def _minify_buildout(src, whitelist=[]):
     """
     Run minification on all javascript files in directory src. Minification
     is done in-place, so the original file is replaced with the minified one.
     """
-    for f_p in _get_all_js_files(src, blacklist):
+    for f_p in _get_all_js_files(src, whitelist):
         jsminify.minify_in_place(f_p)
 
 def _suppress_warnings(src, blacklist=[]):
@@ -890,7 +891,7 @@ def build(args):
         print "data URIs created."
 
     if profile.get("minify"):
-        _minify_buildout(dest, profile.get("minify_blacklist"))
+        _minify_buildout(dest, profile.get("minify_whitelist"))
         print "builds minified."
 
     if profile.get("license"):

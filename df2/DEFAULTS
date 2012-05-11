@@ -32,7 +32,7 @@
 			"copy_zips_to_latest": false,
 			"translate": false,
 			"minify": false,
-			"minify_blacklist": [],
+			"minify_whitelist": ["script"],
 			"local_domain_dir_name": "",
 			"create_manifests": false,
 			"set_base_uri": false,
