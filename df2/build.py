@@ -185,7 +185,7 @@ def _clean_dir(root, exclude_dirs, exclude_files):
             os.rmdir(base)
 
 
-def _add_license(root, license_path="include-license.txt"):
+def _add_license(root, license_path="include-license.txt", whitelist=[]):
     """
     Read a license from license_path and append it to all files under root
     whose extension is in _license_exts.
@@ -198,7 +198,13 @@ def _add_license(root, license_path="include-license.txt"):
     lfile.close()
     
     license_files = []
+
     for base, dirs, files in os.walk(root):
+        if whitelist:
+            bl = [d for d in dirs if not d in whitelist]
+            while bl:
+                dirs.pop(dirs.index(bl.pop()))
+
         license_files.extend( [ os.path.join(base, f) for f in files if f.endswith(_license_exts)] )
     
     for f in license_files:
@@ -268,8 +274,8 @@ def _minify_buildout(src, whitelist=[]):
     for f_p in _get_all_js_files(src, whitelist):
         jsminify.minify_in_place(f_p)
 
-def _suppress_warnings(src, blacklist=[]):
-    for path in _get_all_js_files(src, blacklist):
+def _suppress_warnings(src, whitelist=[]):
+    for path in _get_all_js_files(src, whitelist):
         content = ""
         with open(path, 'rb') as f:
             content = f.read()
@@ -895,11 +901,11 @@ def build(args):
         print "builds minified."
 
     if profile.get("license"):
-        _add_license(dest)
+        _add_license(dest, whitelist=profile.get("minify_whitelist"))
         print "license added."
 
     if profile.get("suppress_warnings"):
-        _suppress_warnings(dest, profile.get("minify_blacklist"))
+        _suppress_warnings(dest, profile.get("minify_whitelist"))
         print "warnings suppressed in build."
 
     client_lang_files = []
