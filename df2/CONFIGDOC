@@ -4,7 +4,7 @@
 		  * Used by 'df2 po2js'. JS files will only be created for the languages
 		  * defined here. The default list is:
 		  */
-		"langs": ["be", "bg", "cs", "da", "de", "el", "en-GB", "es-ES", "es-LA", 
+		"langs": ["be", "bg", "cs", "da", "de", "el", "en-GB", "es-ES", "es-LA",
 		          "et", "fi", "fr", "fr-CA", "fy", "gd", "hi", "hr", "hu", "id",
 		          "it", "ja", "ka", "ko", "lt", "mk", "nb", "nl", "nn", "pl",
 		          "pt", "pt-BR", "ro", "ru", "sk", "sr", "sv", "ta", "te", "tr",
@@ -32,12 +32,12 @@
 			  */
 			"dest": "build",
 			/**
-			  * A list of source repositories which should not be copied 
+			  * A list of source repositories which should not be copied
 			  * to the destination.
 			  */
 			"copy_blacklist": ["scripts",
 			                   "ui-style",
-			                   "ecma-debugger", 
+			                   "ecma-debugger",
 			                   "ui-strings",
 			                   "ui-scripts",
 			                   "lib",
@@ -49,12 +49,12 @@
 			  */
 			"verify_bom": true,
 			/**
-			  * Setting to specify if image resources should be converted 
+			  * Setting to specify if image resources should be converted
 			  * to data URIs.
 			  */
 			"make_data_uris": true,
 			/**
-			  * Setting to specify if the license should be included in the 
+			  * Setting to specify if the license should be included in the
 			  * destination files.
 			  */
 			"license": true,
@@ -70,6 +70,11 @@
 			  * Setting to specify if a build log should be created.
 			  */
 			"create_log": false,
+			/**
+			  * URL for commits. %s will be replaced with a commit hash.
+			  * Example "https://github.com/operasoftware/dragonfly/commit/%s".
+			  */
+			"url_commits": "",
 			/**
 			  * The destination path for the zipped builds.
 			  */

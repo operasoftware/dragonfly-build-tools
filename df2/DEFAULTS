@@ -1,6 +1,6 @@
 {
 	"po2js": {
-		"langs": ["be", "bg", "cs", "de", "en-GB", "es-ES", "es-LA", 
+		"langs": ["be", "bg", "cs", "de", "en-GB", "es-ES", "es-LA",
 		          "et", "fr", "fr-CA", "fy", "gd", "hu", "id",
 		          "it", "ja", "ka", "mk", "nb", "nl", "nn", "pl",
 		          "pt", "pt-BR", "ro", "ru", "sk", "sr", "sv", "tr",
@@ -14,7 +14,7 @@
 			"dest": "build",
 			"copy_blacklist": ["scripts",
 			                   "ui-style",
-			                   "ecma-debugger", 
+			                   "ecma-debugger",
 			                   "ui-strings",
 			                   "ui-scripts",
 			                   "lib",
@@ -27,6 +27,7 @@
 			"force_overwrite": true,
 			"logs": "",
 			"create_log": false,
+			"url_commits": "",
 			"zips": "",
 			"create_zips": false,
 			"copy_zips_to_latest": false,
