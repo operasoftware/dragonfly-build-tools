@@ -28,6 +28,7 @@
 			"logs": "",
 			"create_log": false,
 			"url_commits": "",
+			"bts_url": "",
 			"zips": "",
 			"create_zips": false,
 			"copy_zips_to_latest": false,

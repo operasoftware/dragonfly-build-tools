@@ -76,6 +76,10 @@
 			  */
 			"url_commits": "",
 			/**
+			  * URL for DFL bugs. %s will be replaced with a DFL-xxxx bug number.
+			  */
+			"bts_url": "",
+			/**
 			  * The destination path for the zipped builds.
 			  */
 			"zips": "",

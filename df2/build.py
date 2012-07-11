@@ -51,6 +51,7 @@ _re_linked_source = re.compile(r"(?:src|href)\s*=\s*(?:\"([^\"]*)\"|'([^']*)')")
 _re_strict = re.compile(r"(\"|')use strict\1;?\s*")
 _re_branch = re.compile("# On branch\s*(.*)")
 _re_short_hash = re.compile(r"([0-9-a-z]{12})", re.I)
+_re_bts_dfl = re.compile(r"DFL-\d*")
 LOG_BODY = """<!doctype html>
 <title>%s</title>
 <meta charset=utf-8>
@@ -98,6 +99,7 @@ a:hover
 
 LOG_TITLE = """Log %s %s"""
 LOG_H2 = """%s <a href="%s">%s</a>"""
+LOG_A = """<a href="%s">%s</a>"""
 
 # LOG_LINE % (author, url_commit, hash, summary, date)
 LOG_LINE = """<tr>
@@ -940,22 +942,24 @@ def _get_profile(profiles, name):
                 return profiles[p]
     return None
 
-def log2html(log, tag, rev, short_hash, url_commits):
+def _dfl_bug2link(bts_url, match):
+    url = bts_url % match.group(0)
+    return LOG_A % (url, match.group(0))
+
+def log2html(log, tag, rev, short_hash, url_commits, bts_url):
     entry = LogEntry()
     ret = []
     lines = log.split("\n")
     url_commits = url_commits.encode("utf-8")
+    to_link = partial(_dfl_bug2link, bts_url.encode("utf-8")) if bts_url else None
     for line in lines:
         if line:
             entry.update(line)
         else:
             if entry.shorthash:
                 url = url_commits % entry.shorthash
-                ret.append(LOG_LINE % (entry.author,
-                                       url,
-                                       entry.shorthash,
-                                       entry.subject,
-                                       entry.date))
+                subject = _re_bts_dfl.sub(to_link, entry.subject) if bts_url else entry.subject
+                ret.append(LOG_LINE % (entry.author, url, entry.shorthash, subject, entry.date))
             entry = LogEntry()
 
     log_title = LOG_TITLE % (tag.replace("_", " "), short_hash)
@@ -1007,8 +1011,8 @@ def build(args):
     err = err.strip(" \n\t")
     if err:
         # It's expected to be in detached head state here.
-        if not "You are in 'detached HEAD' state." in err:
-            print err
+        if not ("You are in 'detached HEAD' state." in err or "HEAD is now at" in err):
+            print "abort", err
             return
 
     if out:
@@ -1173,7 +1177,8 @@ def build(args):
             else:
                 if is_git:
                     url_commits = profile.get("url_commits")
-                    out = log2html(out, args.tag, rev, short_hash, url_commits)
+                    bts_url = profile.get("bts_url")
+                    out = log2html(out, args.tag, rev, short_hash, url_commits, bts_url)
                 with open(os.path.join(log_dir, log_name), "w") as f:
                     if not is_git and os.name == "nt":
                         f.write(out.decode("windows-1252").encode("utf-8"))
