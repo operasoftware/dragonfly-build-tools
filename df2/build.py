@@ -50,8 +50,9 @@ _re_client_lang_file = re.compile("^client-([a-zA-Z\-]{2,5})\.xml$")
 _re_linked_source = re.compile(r"(?:src|href)\s*=\s*(?:\"([^\"]*)\"|'([^']*)')")
 _re_strict = re.compile(r"(\"|')use strict\1;?\s*")
 _re_branch = re.compile("# On branch\s*(.*)")
+_re_short_hash = re.compile(r"([0-9-a-z]{12})", re.I)
 LOG_BODY = """<!doctype html>
-<title>Log %s %s</title>
+<title>%s</title>
 <meta charset=utf-8>
 <style>
 html, body
@@ -92,8 +93,11 @@ a:hover
    text-decoration: underline;
 }
 </style>
-<h2>Log %s %s %s</h2>
+<h2>%s</h2>
 <table>%s</table>"""
+
+LOG_TITLE = """Log %s %s"""
+LOG_H2 = """%s <a href="%s">%s</a>"""
 
 # LOG_LINE % (author, url_commit, hash, summary, date)
 LOG_LINE = """<tr>
@@ -945,15 +949,20 @@ def log2html(log, tag, rev, short_hash, url_commits):
         if line:
             entry.update(line)
         else:
-            url = url_commits % entry.shorthash
-            ret.append(LOG_LINE % (entry.author,
-                                   url,
-                                   entry.shorthash,
-                                   entry.subject,
-                                   entry.date))
+            if entry.shorthash:
+                url = url_commits % entry.shorthash
+                ret.append(LOG_LINE % (entry.author,
+                                       url,
+                                       entry.shorthash,
+                                       entry.subject,
+                                       entry.date))
             entry = LogEntry()
 
-    return LOG_BODY % (rev, short_hash, tag, rev, short_hash, "".join(ret))
+    log_title = LOG_TITLE % (tag.replace("_", " "), short_hash)
+    log_h2 = LOG_H2 % (tag.replace("_", " "),
+                       url_commits % short_hash,
+                       short_hash)
+    return LOG_BODY % (log_title, log_h2, "".join(ret))
 
 def build(args):
     build_config = args.config.get("build", {})
@@ -995,9 +1004,12 @@ def build(args):
         cmds = HG_COMMANDS
 
     out, err = shell(*cmds["update"](args.tag))
+    err = err.strip(" \n\t")
     if err:
-        print "abort", err
-        return
+        # It's expected to be in detached head state here.
+        if not "You are in 'detached HEAD' state." in err:
+            print err
+            return
 
     if out:
         print out.strip()
@@ -1013,123 +1025,127 @@ def build(args):
     else:
         rev, short_hash = out.strip().split(":", 1)
 
-    src = profile.get("src", None)
-    dest = profile.get("dest", None)
-    if not (src and dest):
-        print "abort, missing \"src\" or \"dest\" in the profile"
-        return
-
-    src = os.path.abspath(os.path.normpath(src))
-    dest = os.path.abspath(os.path.normpath(dest))
-    if profile.get("verify_bom"):
-        bad = _get_bad_encoding_files(src)
-        if bad:
-            print "abort",
-            print "the following files do not seem to be UTF8 with BOM encoded:"
-            for b in bad: print "\t%s" % b
+    if not args.skip_build:
+        src = profile.get("src", None)
+        dest = profile.get("dest", None)
+        if not (src and dest):
+            print "abort, missing \"src\" or \"dest\" in the profile"
             return
 
-    if os.path.isdir(dest) and not profile.get("force_overwrite"):
-        print "abort",
-        print "destination exists! Set \"force_overwrite\" in the config file"
-        return
+        src = os.path.abspath(os.path.normpath(src))
+        dest = os.path.abspath(os.path.normpath(dest))
+        if profile.get("verify_bom"):
+            bad = _get_bad_encoding_files(src)
+            if bad:
+                print "abort",
+                print "the following files do not seem to be UTF8 with BOM encoded:"
+                for b in bad: print "\t%s" % b
+                return
 
-    revision_name = "%s:%s, %s, %s" % (rev, short_hash, profile.get("name"), args.tag)
-    dirvars = {}
-    if profile.get("translate"):
-        dirvars["exclude_uistrings"] = True
+        if os.path.isdir(dest) and not profile.get("force_overwrite"):
+            print "abort",
+            print "destination exists! Set \"force_overwrite\" in the config file"
+            return
 
-    export(src, dest,
-           exclude_dirs=profile.get("copy_blacklist"),
-           keywords={"$dfversion$": args.revision, "$revdate$": revision_name},
-           directive_vars=dirvars)
-    print "build exported."
-    if profile.get("translate"):
-        _localize_buildout(dest,
-                           os.path.join(src, "ui-strings"),
-                           profile.get("minify"))
-        print "build translated"
+        revision_name = "%s:%s, %s, %s" % (rev, short_hash, profile.get("name"), args.tag)
+        dirvars = {}
+        if profile.get("translate"):
+            dirvars["exclude_uistrings"] = True
 
-    if profile.get("make_data_uris"):
-        _convert_imgs_to_data_uris(dest)
-        # any remaining image in ui-images is not used
-        img_dir = os.path.join(dest, 'ui-images')
-        shutil.rmtree(img_dir)
-        print "data URIs created"
+        export(src, dest,
+               exclude_dirs=profile.get("copy_blacklist"),
+               keywords={"$dfversion$": args.revision, "$revdate$": revision_name},
+               directive_vars=dirvars)
+        print "build exported."
+        if profile.get("translate"):
+            _localize_buildout(dest,
+                               os.path.join(src, "ui-strings"),
+                               profile.get("minify"))
+            print "build translated"
 
-    if profile.get("minify"):
-        _minify_buildout(dest, profile.get("minify_whitelist"))
-        print "builds minified"
+        if profile.get("make_data_uris"):
+            _convert_imgs_to_data_uris(dest)
+            # any remaining image in ui-images is not used
+            img_dir = os.path.join(dest, 'ui-images')
+            shutil.rmtree(img_dir)
+            print "data URIs created"
 
-    if profile.get("license"):
-        _add_license(dest, whitelist=profile.get("minify_whitelist"))
-        print "license added"
+        if profile.get("minify"):
+            _minify_buildout(dest, profile.get("minify_whitelist"))
+            print "builds minified"
 
-    if profile.get("suppress_warnings"):
-        _suppress_warnings(dest, profile.get("minify_whitelist"))
-        print "warnings suppressed in build."
+        if profile.get("license"):
+            _add_license(dest, whitelist=profile.get("minify_whitelist"))
+            print "license added"
 
-    client_lang_files = []
-    for item in os.listdir(dest):
-        if os.path.isfile(os.path.join(dest, item)):
-            match = _re_client_lang_file.match(item)
-            if match:
-                client_lang_files.append((item, match.group(1)))
+        if profile.get("suppress_warnings"):
+            _suppress_warnings(dest, profile.get("minify_whitelist"))
+            print "warnings suppressed in build."
 
-    if profile.get("create_zips"):
-        zip_dir = os.path.abspath(os.path.normpath(profile.get("zips")))
-        zip_target = os.path.join(zip_dir, "%s.%s" % (rev, short_hash))
-        if not os.path.isdir(zip_target):
-            os.makedirs(zip_target)
+        client_lang_files = []
+        for item in os.listdir(dest):
+            if os.path.isfile(os.path.join(dest, item)):
+                match = _re_client_lang_file.match(item)
+                if match:
+                    client_lang_files.append((item, match.group(1)))
 
-        for name, lang in client_lang_files:
-            make_build_archive(dest, zip_target, name)
-            print "build for %s zipped" % lang
-
-        if profile.get("copy_zips_to_latest"):
-            latest = os.path.join(zip_dir, "latest")
-            if os.path.exists(latest):
-                shutil.rmtree(latest)
-            shutil.copytree(zip_target, latest)
-
-    if profile.get("set_base_uri"):
-        path_segs = dest.split(os.path.sep)
-        pos = path_segs.index(profile.get("local_domain_dir_name"))
-        if pos > -1:
-            base_url = "/%s/" % "/".join(path_segs[pos + 1:])
-            base_url_tag = (_base_url % base_url).strip().encode("utf-8")
-            cmd_base_url = "<!-- command set_rel_base_url -->"
+        if profile.get("create_zips"):
+            zip_dir = os.path.abspath(os.path.normpath(profile.get("zips")))
+            zip_target = os.path.join(zip_dir, "%s.%s" % (rev, short_hash))
+            if not os.path.isdir(zip_target):
+                os.makedirs(zip_target)
 
             for name, lang in client_lang_files:
-                path = os.path.join(dest, name)
-                content = ""
-                with open(path, 'rb') as f:
-                    content = f.read()
-                if content:
-                    with open(path, 'wb') as f:
-                        f.write(content.replace(cmd_base_url, base_url_tag, 1))
-                else:
-                    print "abort, could not set base URL in %s" % name
-                    return
+                make_build_archive(dest, zip_target, name)
+                print "build for %s zipped" % lang
 
-            print "base URLs set"
-        else:
-            print "abort, could not set the base URLs"
-            return
+            if profile.get("copy_zips_to_latest"):
+                latest = os.path.join(zip_dir, "latest")
+                if os.path.exists(latest):
+                    shutil.rmtree(latest)
+                shutil.copytree(zip_target, latest)
 
-    if profile.get("create_manifests"):
-        try:
-            root = profile.get("local_domain_dir_name").encode("utf-8")
-            create_manifests(dest.encode("utf-8"), domain_token=root, tag=args.tag)
-            print "app cache manifests created"
-        except:
-            print "abort, could not create the manifest files"
-            return
+        if profile.get("set_base_uri"):
+            path_segs = dest.split(os.path.sep)
+            pos = path_segs.index(profile.get("local_domain_dir_name"))
+            if pos > -1:
+                base_url = "/%s/" % "/".join(path_segs[pos + 1:])
+                base_url_tag = (_base_url % base_url).strip().encode("utf-8")
+                cmd_base_url = "<!-- command set_rel_base_url -->"
+
+                for name, lang in client_lang_files:
+                    path = os.path.join(dest, name)
+                    content = ""
+                    with open(path, 'rb') as f:
+                        content = f.read()
+                    if content:
+                        with open(path, 'wb') as f:
+                            f.write(content.replace(cmd_base_url, base_url_tag, 1))
+                    else:
+                        print "abort, could not set base URL in %s" % name
+                        return
+
+                print "base URLs set"
+            else:
+                print "abort, could not set the base URLs"
+                return
+
+        if profile.get("create_manifests"):
+            try:
+                root = profile.get("local_domain_dir_name").encode("utf-8")
+                create_manifests(dest.encode("utf-8"), domain_token=root, tag=args.tag)
+                print "app cache manifests created"
+            except:
+                print "abort, could not create the manifest files"
+                return
 
     if profile.get("create_log"):
         log_dir = os.path.abspath(os.path.normpath(profile.get("logs")))
         start_rev = args.last_revision_log
-        log_name = "%s.%s.log%s" % (rev, short_hash, ".html" if is_git else "")
+        if is_git:
+            log_name = "%s.%s.html" % (args.tag.lower().replace("_", "-"), short_hash)
+        else:
+            log_name = "%s.%s.log" % (rev, short_hash)
         if not os.path.isdir(log_dir):
             os.makedirs(log_dir)
 
@@ -1143,11 +1159,12 @@ def build(args):
                 last_log = logs[-2][0] if len(logs) > 1 else ""
 
             if last_log:
-                s = last_log.split(".")
-                if is_git and len(s) == 6:
-                    start_rev = s[3]
+                if is_git:
+                    m = _re_short_hash.search(last_log)
+                    if m:
+                        start_rev = m.group(1)
                 elif not is_git and len(s) == 3:
-                    start_rev = s[1]
+                    start_rev = last_log.split(".")[1]
 
         if start_rev:
             out, err = shell(*cmds["log"](start_rev, args.tag))
@@ -1167,9 +1184,11 @@ def build(args):
             print "not possible to find a start revision",
             print "provide a start revision with the -l flag"
 
-    AUTHORS = os.path.join(src, '..', 'AUTHORS')
-    if os.path.isfile(AUTHORS):
-        shutil.copy(AUTHORS, os.path.join(dest, 'AUTHORS'))
+    if not args.skip_build:
+        AUTHORS = os.path.join(src, '..', 'AUTHORS')
+        if os.path.isfile(AUTHORS):
+            shutil.copy(AUTHORS, os.path.join(dest, 'AUTHORS'))
+
     tip = current_branch if is_git else "tip"
     if tip:
         print "update to %s" % tip
@@ -1202,11 +1221,19 @@ def setup_subparser(subparsers, config):
                               the log is created from the previous log
                               (build recreated). If there is no log and the
                               argument is not set no log is created.""")
+    subp.set_defaults(skip_build=False)
     subp.set_defaults(func=build)
 
     subp = subparsers.add_parser('fixBOM', help="Add a BOM in all JS source files.")
     subp.add_argument('src', help="""The source path.""")
     subp.set_defaults(func=fix_bom)
+
+    subp = subparsers.add_parser('log', help="Create a log file.")
+    subp.add_argument('tag', help="""Start revision.""")
+    subp.add_argument('last_revision_log', help="""End revision.""")
+    subp.add_argument('profile', help="""The profile to or the log.""")
+    subp.set_defaults(skip_build=True)
+    subp.set_defaults(func=build)
 
 if __name__ == "__main__":
     sys.exit(main())
