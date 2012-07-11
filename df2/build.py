@@ -87,7 +87,7 @@ a
 {
     text-decoration: none;
     font-family: monospace;
-    color: hsl(220, 100%%, 65%%);
+    color: #05F;
 }
 a:hover
 {
@@ -963,7 +963,8 @@ def log2html(log, tag, rev, short_hash, url_commits, bts_url):
             entry = LogEntry()
 
     log_title = LOG_TITLE % (tag.replace("_", " "), short_hash)
-    log_h2 = LOG_H2 % (tag.replace("_", " "),
+    tag_name = tag.replace("_", " ")
+    log_h2 = LOG_H2 % (_re_bts_dfl.sub(to_link, tag_name) if bts_url else tag_name,
                        url_commits % short_hash,
                        short_hash)
     return LOG_BODY % (log_title, log_h2, "".join(ret))
