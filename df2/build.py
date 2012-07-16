@@ -93,12 +93,15 @@ a:hover
 {
    text-decoration: underline;
 }
+.right-aligned
+{
+    float: right;
+}
 </style>
 <h2>%s</h2>
 <table>%s</table>"""
 
-LOG_TITLE = """Log %s %s"""
-LOG_H2 = """%s <a href="%s">%s</a>"""
+LOG_H2 = """%s <span class="right-aligned">%s</span> """
 LOG_A = """<a href="%s">%s</a>"""
 
 # LOG_LINE % (author, url_commit, hash, summary, date)
@@ -951,23 +954,20 @@ def log2html(log, tag, rev, short_hash, url_commits, bts_url):
     ret = []
     lines = log.split("\n")
     url_commits = url_commits.encode("utf-8")
-    to_link = partial(_dfl_bug2link, bts_url.encode("utf-8")) if bts_url else None
+    to_bts_link = partial(_dfl_bug2link, bts_url.encode("utf-8")) if bts_url else None
     for line in lines:
         if line:
             entry.update(line)
         else:
             if entry.shorthash:
                 url = url_commits % entry.shorthash
-                subject = _re_bts_dfl.sub(to_link, entry.subject) if bts_url else entry.subject
+                subject = _re_bts_dfl.sub(to_bts_link, entry.subject) if bts_url else entry.subject
                 ret.append(LOG_LINE % (entry.author, url, entry.shorthash, subject, entry.date))
             entry = LogEntry()
 
-    log_title = LOG_TITLE % (tag.replace("_", " "), short_hash)
-    tag_name = tag.replace("_", " ")
-    log_h2 = LOG_H2 % (_re_bts_dfl.sub(to_link, tag_name) if bts_url else tag_name,
-                       url_commits % short_hash,
-                       short_hash)
-    return LOG_BODY % (log_title, log_h2, "".join(ret))
+    m = _re_bts_dfl.search(tag)
+    log_h2 = LOG_H2 % (LOG_A % (url_commits % tag, tag), to_bts_link(m) if m else "")
+    return LOG_BODY % (tag, log_h2, "".join(ret))
 
 def build(args):
     build_config = args.config.get("build", {})
