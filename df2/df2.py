@@ -34,11 +34,11 @@ def get_config():
 					deep_update(config, json.loads(f.read()))
 				break
 	return config
-	
+
 def main():
-	description = """Tool collection to build Opera Dragonfly and handle 
-	language strings. The tool uses an optional configuration file in the home 
-	directory ("df2.ini", ".df2", "DF2" or "df2.cfg"). Use 'df2 configformat' 
+	description = """Tool collection to build Opera Dragonfly and handle
+	language strings. The tool uses an optional configuration file in the home
+	directory ("df2.ini", ".df2", "DF2" or "df2.cfg"). Use 'df2 configdoc'
 	to see all options."""
 
 	parser = argparse.ArgumentParser(prog='df2', description=description)
