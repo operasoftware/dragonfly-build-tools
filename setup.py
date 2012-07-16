@@ -1,7 +1,6 @@
-
 setup_args = dict(name='df2',
                   version='0.1',
-                  url='https://bitbucket.org/scope/dragonfly-tools/',
+                  url='https://github.com/operasoftware/dragonfly-build-tools',
                   author='Christian Krebs, Rune Halvorsen',
                   author_email='chrisk@opera.com',
                   description='Tools for Opera Dragonfly development.',
