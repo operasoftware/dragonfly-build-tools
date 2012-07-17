@@ -5,6 +5,7 @@ import codecs
 import time
 import argparse
 import db2js
+import codecs
 
 def get_timestamp():
     return time.strftime("%a %d %b %Y %H:%M", time.localtime())
@@ -50,12 +51,13 @@ def jssort(args):
 
 	out_sorted = sorted(out, key=lambda item: item[0])
 	with open(args.src, "wb") as f:
+		f.write(codecs.BOM_UTF8)
 		f.write(db2js.HEAD)
 		for e in out_sorted:
 			f.write(e[1])
 
 def setup_subparser(subparsers, config):
 	subp = subparsers.add_parser("jssort", help="Sort the entries in a .js file by the IDs in place.")
-	subp.add_argument("src", help="""The source file, typically 
+	subp.add_argument("src", help="""The source file, typically
 	                                 src/ui-strings/ui_strings-en.js.""")
 	subp.set_defaults(func=jssort)
