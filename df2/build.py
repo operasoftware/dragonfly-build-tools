@@ -949,6 +949,10 @@ def _dfl_bug2link(bts_url, match):
     url = bts_url % match.group(0)
     return LOG_A % (url, match.group(0))
 
+def escape_html(str):
+    return str.replace("&", "&amp;").replace("<" , "&lt;")
+
+
 def log2html(log, tag, rev, short_hash, url_commits, bts_url):
     entry = LogEntry()
     ret = []
@@ -961,7 +965,8 @@ def log2html(log, tag, rev, short_hash, url_commits, bts_url):
         else:
             if entry.shorthash:
                 url = url_commits % entry.shorthash
-                subject = _re_bts_dfl.sub(to_bts_link, entry.subject) if bts_url else entry.subject
+                subject_escaped = escape_html(entry.subject)
+                subject = _re_bts_dfl.sub(to_bts_link, subject_escaped) if bts_url else subject_escaped
                 ret.append(LOG_LINE % (entry.author, url, entry.shorthash, subject, entry.date))
             entry = LogEntry()
 
