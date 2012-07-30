@@ -1170,9 +1170,7 @@ def build(args):
 
             if last_log:
                 if is_git:
-                    m = _re_short_hash.search(last_log)
-                    if m:
-                        start_rev = m.group(1)
+                    start_rev = last_log.split(".").pop(-2)
                 elif not is_git and len(s) == 3:
                     start_rev = last_log.split(".")[1]
 
