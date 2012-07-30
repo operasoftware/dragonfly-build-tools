@@ -9,6 +9,7 @@ import db2js
 import verifyids
 import showconfig
 import build
+import cleanrepo
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
