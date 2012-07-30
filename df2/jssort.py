@@ -50,6 +50,11 @@ def jssort(args):
 		prev_match = match
 
 	out_sorted = sorted(out, key=lambda item: item[0])
+	previous = None
+	for ident, entry in out_sorted:
+		if ident == previous:
+			print "duplicated ID: %s" % ident
+		previous = ident
 	with open(args.src, "wb") as f:
 		f.write(codecs.BOM_UTF8)
 		f.write(db2js.HEAD)
