@@ -38,28 +38,34 @@ def jssort(args):
 	if not content:
 		raise MissingSRC(args.src)
 	prev_match = None
-	CAPTION = 3
 	IDENTIFIER = 2
-	DESCRIPTION = 1
 	for match in RE_STR.finditer(content):
 		ident = match.group(IDENTIFIER)
-		out.append((match.group(IDENTIFIER), match.group(0)))
+		out.append((match.group(IDENTIFIER), match.group(0).strip()))
 		if prev_match:
 			if match.start(0) - prev_match.end(0) > 1:
 				raise JSFileParseError(content[prev_match.end(0):match.start(0)])
 		prev_match = match
-
-	out_sorted = sorted(out, key=lambda item: item[0])
+	ID = 0
+	ENTRY = 1
+	out_sorted = sorted(out, key=lambda item: item[ID])
 	previous = None
+	duplicates = []
 	for ident, entry in out_sorted:
-		if ident == previous:
+		if previous and ident == previous[ID]:
 			print "duplicated ID: %s" % ident
-		previous = ident
+			if entry == previous[ENTRY]:
+				duplicates.append((ident, entry))
+		previous = (ident, entry)
+	for item in duplicates:
+		out_sorted.pop(out_sorted.index(item))
+		print "removed duplicated entry in ui strings\n %s" % item[ENTRY]
 	with open(args.src, "wb") as f:
 		f.write(codecs.BOM_UTF8)
 		f.write(db2js.HEAD)
 		for e in out_sorted:
 			f.write(e[1])
+			f.write("\n\n")
 
 def setup_subparser(subparsers, config):
 	subp = subparsers.add_parser("jssort", help="Sort the entries in a .js file by the IDs in place.")
