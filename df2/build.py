@@ -569,10 +569,14 @@ def _find_file_path(base, file_name):
 def URI_to_os_path(path):
     return os.path.join(*[urllib.unquote(part) for part in path.split('/')])
 
-def _convert_imgs_to_data_uris(src):
+def _convert_imgs_to_data_uris(src, whitelist=[]):
     re_img = re.compile(r""".*?url\((['"]?(.*?)['"]?)\)""")
     deletions = []
     for base, dirs, files in os.walk(src):
+        if whitelist:
+            bl = [d for d in dirs if not d in whitelist]
+            while bl:
+                dirs.pop(dirs.index(bl.pop()))
         for path in [ os.path.join(base, f) for f in files if f.endswith(".css") ]:
             fp = codecs.open(path, "r", "utf_8_sig")
             dirty = False
@@ -1074,7 +1078,7 @@ def build(args):
             print "build translated"
 
         if profile.get("make_data_uris"):
-            _convert_imgs_to_data_uris(dest)
+            _convert_imgs_to_data_uris(dest, profile.get("minify_whitelist"))
             # any remaining image in ui-images is not used
             img_dir = os.path.join(dest, 'ui-images')
             shutil.rmtree(img_dir)
