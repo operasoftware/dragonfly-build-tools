@@ -10,6 +10,8 @@ import verifyids
 import showconfig
 import build
 import cleanrepo
+import msgdefs
+import jsclasses
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
