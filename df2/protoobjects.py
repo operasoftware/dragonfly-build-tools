@@ -97,6 +97,11 @@ class Field(Prop, DocLines):
     def full_type_name(self):
         return self._type
 
+    @property
+    def default_value(self):
+        try: return self.options.default.value
+        except AttributeError: return ""
+
 class Message(Type):
     sup_type = MESSAGE
     def __init__(self, name, doc, comment, parent_scope):
@@ -171,7 +176,7 @@ class EnumField(Type, DocLines):
         self.doc = doc
         self.comment = comment
 
-class Service(object):
+class Service(DocLines):
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name
         self.parent_scope = parent_scope
@@ -180,6 +185,17 @@ class Service(object):
         self.options = FieldOptions()
         self.doc = doc
         self.comment = comment
+
+    @property
+    def version(self):
+        try: return self.options.version.value.strip("\"")
+        except AttributeError: return ""
+
+    def __getattr__(self, key):
+        for t in [self.commands, self.events]:
+            for m in t:
+                if m.name == key: return m
+        raise AttributeError, key
 
 class Global(object):
     def __init__(self):

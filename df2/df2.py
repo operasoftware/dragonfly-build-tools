@@ -12,6 +12,7 @@ import build
 import cleanrepo
 import msgdefs
 import jsclasses
+import scopedoc
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
