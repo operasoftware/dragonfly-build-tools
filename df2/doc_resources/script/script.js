@@ -18,7 +18,7 @@
   {
     var h1 = document.querySelector("h1");
     h1_height = h1 && parseInt(h1.offsetHeight);
-    side_panel = document.querySelector(".sidepanel");
+    side_panel = document.querySelector(".sidepanel, #logo");
     set_sidepanel_top();
     window.addEventListener("scroll", set_sidepanel_top, false);
   };

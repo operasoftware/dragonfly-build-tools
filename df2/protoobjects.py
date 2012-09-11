@@ -49,10 +49,10 @@ class Bytes(Type):
     name = "bytes"
 
 class DocLines(object):
-    _re_doc_lines = re.compile(r"\r?\n[ \t]*\* ?")
+    _re_doc_lines = re.compile(r"(?:/\*+)?\r?\n[ \t]*\* ?/?")
     @property
     def doc_lines(self):
-        return self._re_doc_lines.split(self.doc.strip(" \t*/\r\n"))
+        return self._re_doc_lines.split(self.doc.strip())
 
 class FieldOptions(object): pass
 

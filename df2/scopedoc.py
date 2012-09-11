@@ -33,6 +33,7 @@ RESOURCES = "doc_resources"
 HEAD_INDEX = """<!doctype html>
 <title>Scope Interface</title>
 <link rel="stylesheet" href="./style/style.css">
+<script src="./script/script.js"></script>
 <h1>Scope Interface</h1>
 """
 HEAD = """<!doctype html>
@@ -108,7 +109,8 @@ class Service(object):
         self.sort_key = 1e8 * version[0] + 1e4 * version[1] + version[2]
         self.service_version = version
         self.protopath = protopath
-        self.html_path = os.path.join(dest, "%s.%s.html" % (service.name, service.version))
+        self.file_name = "%s.%s.html" % (service.name, service.version)
+        self.html_path = os.path.join(dest, self.file_name)
         self.global_scope = global_scope
 
 def copy_html_src(html_src, dest):
@@ -197,16 +199,21 @@ def print_index(fp, services_dict):
     fp.write(HEAD_INDEX)
     services = services_dict.items()
     services.sort(key= lambda s: s[0])
+    fp.write("<div id=\"logo\"></div>\n")
+    fp.write("<div class=\"index-view\">\n")
     for name, versions_dict in services:
 
         versions = versions_dict.items()
         versions.sort(key=lambda s: s[1].service_version[2], reverse=True)
         versions.sort(key=lambda s: s[1].service_version[1], reverse=True)
         versions.sort(key=lambda s: s[1].service_version[0], reverse=True)
-        service = versions.pop(0)[1].service
-        fp.write("<h2>%s <span class=\"service-version\">%s</span></h2>" % (name, service.version))
-        for version, service in versions:
-            fp.write("<h3>Version %s</h3>" % version)
+        service = versions.pop(0)[1]
+        fp.write("<h2><a href=\"%s\">%s <span class=\"service-version\">%s</span></a></h2>" % (service.file_name, name, service.service.version))
+        #fp.write("<ul class=\"versions\">")
+        #for version, service in versions:
+        #    fp.write("<li>%s</li>" % version)
+        #fp.write("</ul>")
+    fp.write("</div>\n")
 
 
 
@@ -226,7 +233,6 @@ def scope_doc(args):
     services = get_scope_services(proto_paths, args.dest)
     with open(os.path.join(args.dest, "index.html"), "wb") as fp:
          print_index(fp, services)
-    return
     for service in services.values():
         for version in service.values():
             with open(version.html_path, "wb") as fp:

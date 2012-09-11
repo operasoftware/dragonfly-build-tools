@@ -172,7 +172,7 @@ class TextProcessor(object):
             node = node.next
 
 class BoldTextProcessor(TextProcessor):
-    re = reg_exp(r"(?<!\\)\*\*(?:[^ *]|\*[^*])*\*\*")
+    re = reg_exp(r"(?<!\\)\*\*(?:[^ *])*\*\*")
     name = "b"
     START = 2
     END = -2

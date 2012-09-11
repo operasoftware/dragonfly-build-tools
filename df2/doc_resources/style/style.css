@@ -44,6 +44,32 @@ pre a:hover
   color: hsl(0, 0%, 0%);
 }
 
+.index-view h2
+{
+  clear: both;
+}
+
+.index-view a
+{
+  display: block;
+  border-bottom: 1px solid transparent;
+}
+
+.index-view a:hover
+{
+  text-decoration: none;
+  border-bottom: 1px solid hsl(0, 0%, 70%);
+}
+
+
+.versions
+{
+  float: right;
+  margin: 0;
+  margin-bottom: 10px;
+  xwidth: 4ex;
+}
+
 .message .doc
 {
   color: hsl(0, 0%, 30%);
@@ -90,7 +116,8 @@ h1
   float: right;
 }
 
-.sidepanel
+.sidepanel,
+#logo
 {
   padding: 10px;
   width: 230px;
@@ -101,7 +128,13 @@ h1
   overflow: auto;
 }
 
-.main-view
+#logo
+{
+  background: transparent url(img-press-logo.png) 0 100% no-repeat;
+}
+
+.main-view,
+.index-view
 {
   margin-left: 250px;
   padding: 10px;
@@ -176,7 +209,7 @@ x.field:last-of-type
 .note
 {
   display: inline-block;
-  background-color: hsl(0, 0%, 60%);
+  background-color: hsl(0, 0%, 50%);
   content: "i";
   color: #fff;
   font-weight: bold;
