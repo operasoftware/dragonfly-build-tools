@@ -37,6 +37,18 @@ a:hover
   text-decoration: underline;
 }
 
+pre a,
+pre a:hover
+{
+  text-decoration: none;
+  color: hsl(0, 0%, 0%);
+}
+
+.message .doc
+{
+  color: hsl(0, 0%, 30%);
+}
+
 
 .last-created
 {
@@ -81,9 +93,12 @@ h1
 .sidepanel
 {
   padding: 10px;
-  float: left;
   width: 230px;
   border-right: 1px solid hsl(0, 0%, 70%);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  overflow: auto;
 }
 
 .main-view
@@ -100,7 +115,7 @@ h1
   margin-left: 20px;
 }
 
-.field
+x.field
 {
   margin: 0;
   padding-top: 1px;
@@ -133,24 +148,6 @@ x.field:last-of-type
   margin: 5px 0;
 }
 
-.message-description
-{
-  xmargin: 0 5x;
-}
-
-.field .doc
-{
-  xbackground-color: hsl(0, 0%, 95%);
-}
-
-.field-description,
-.enum-description
-{
-  xbackground-color: hsl(0, 0%, 92%);
-  xborder-radius: 3px;
-  margin: 0;
-  xpadding: 1px 0;
-}
 
 .keyword
 {
@@ -158,15 +155,37 @@ x.field:last-of-type
   font-weight: bold;
 }
 
-.qualifier
+.qualifier,
+.enum-name,
+.enum-key
 {
   color: #DD1144;
 }
 
-.field-name,
-.enum-name
+.field-name
 {
   font-weight: bold;
+}
+
+.proto-key,
+.since-version
+{
+  color: hsl(0, 0%, 60%);
+}
+
+.note
+{
+  display: inline-block;
+  background-color: hsl(0, 0%, 60%);
+  content: "i";
+  color: #fff;
+  font-weight: bold;
+  font-family: serif;
+  font-style: italic;
+  width: 14px;
+  height: 14px;
+  text-align: center;
+  border-radius: 7px;
 }
 
 code
@@ -185,27 +204,31 @@ h3
   padding-left: 20px;
 }
 
-li.selected .event::before,
-li.selected .command::before
+:target::after
 {
   content: ' ';
   display: block;
-  float: left;
+  float: right;
   width: 14px;
   height: 14px;
   margin-top: 0px;
   margin-left: -18px;
   margin-bottom: -20px;
-  background-image: linear-gradient(45deg, hsl(0, 0%, 25%) 0px,
-                                             hsl(0, 0%, 25%) 4px,
+  background-image: linear-gradient(-45deg, #DD1144 0px,
+                                             #DD1144 4px,
                                              transparent 4px),
-                   linear-gradient(135deg, hsl(0, 0%, 25%) 0px,
-                                             hsl(0, 0%, 25%) 4px,
+                   linear-gradient(-135deg, #DD1144 0px,
+                                             #DD1144 4px,
                                              transparent 4px),
-                   linear-gradient(0deg, hsl(0, 0%, 25%) 0px,
-                                            hsl(0, 0%, 25%) 0px);
-  background-position: 7px 1px, 7px 8px, 0px 6px;
+                   linear-gradient(0deg, #DD1144 0px,
+                                           #DD1144 0px);
+  background-position: 0px 1px, 0px 8px, 6px 6px;
   background-size: 7px 7px, 7px 7px, 7px 4px;
   background-repeat: no-repeat;
+}
+
+h2:target::after
+{
+  margin-top: 3px;
 }
 

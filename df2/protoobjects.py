@@ -191,6 +191,18 @@ class Service(DocLines):
         try: return self.options.version.value.strip("\"")
         except AttributeError: return ""
 
+    @property
+    def command_names(self):
+        cmds = map(lambda c: c.name, self.commands)
+        cmds.sort()
+        return cmds
+
+    @property
+    def event_names(self):
+        evs = map(lambda e: e.name, self.events)
+        evs.sort()
+        return evs
+
     def __getattr__(self, key):
         for t in [self.commands, self.events]:
             for m in t:

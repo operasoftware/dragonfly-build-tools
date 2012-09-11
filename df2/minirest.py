@@ -121,10 +121,7 @@ class SinceProcessor(object):
     def process(self, lines, ctx_node):
         count = len(lines)
         match = self.re.match(lines[0])
-        if match:
-            line = lines.pop(0)
-            div = ctx_node.append(node.Element("div", "Added in version %s" % match.group(self.VERSION)))
-            div.set_attr("class", "since-version")
+        if match: ctx_node.append(node.Element("p", lines.pop(0)))
         return len(lines) < count
 
 class ParagraphProcessor(object):
@@ -195,6 +192,33 @@ class EmTextProcessor(TextProcessor):
     END = -1
     REPLACE = r"\*", "*"
 
+class SinceTextProcessor(TextProcessor):
+    re = reg_exp(r"@since(\s*[\d.]+)")
+    name = "span"
+    START = 6
+    END = None
+    REPLACE = None
+
+    def handle(self, text_node, match):
+        span = TextProcessor.handle(self, text_node, match)
+        span.text_content = "Added in version " + span.text_content.strip()
+        span.set_attr("class", "since-version")
+        return span
+
+class NoteTextProcessor(TextProcessor):
+    re = reg_exp(r"@note")
+    name = "span"
+    START = None
+    END = None
+    REPLACE = None
+
+    def handle(self, text_node, match):
+        span = TextProcessor.handle(self, text_node, match)
+        span.text_content = ""
+        span.set_attr("class", "note")
+        return span
+
+
 class LinkTextProcessor(TextProcessor):
     re = reg_exp(r"[^ ]{4,5}://[^ ]+")
     name = "a"
@@ -231,7 +255,9 @@ text_processors = [BoldTextProcessor(),
                    EmTextProcessor(),
                    CodeTextProcessor(),
                    SpecialTextProcessor(),
-                   LinkTextProcessor()]
+                   LinkTextProcessor(),
+                   SinceTextProcessor(),
+                   NoteTextProcessor()]
 
 def process(lines):
     root = node.Root()
