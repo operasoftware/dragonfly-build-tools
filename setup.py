@@ -5,7 +5,10 @@ setup_args = dict(name='df2',
                   author_email='chrisk@opera.com',
                   description='Tools for Opera Dragonfly development.',
                   data_files=[('df2', ['df2/DEFAULTS',
-                                       'df2/CONFIGDOC'])],
+                                       'df2/CONFIGDOC']),
+                              ('df2/doc_resources/style', ['df2/doc_resources/style/style.css',
+                                                           'df2/doc_resources/style/img-press-logo.png']),
+                              ('df2/doc_resources/script', ['df2/doc_resources/script/script.js'])],
                   packages=['df2'],
                   zip_safe=False)
 
