@@ -5,7 +5,7 @@
   var side_panel_top = -1;
   var set_sidepanel_top = function()
   {
-    var scroll_top = document.documentElement.scrollTop;
+    var scroll_top = document.documentElement.scrollTop || document.body.scrollTop;
     var top = scroll_top > h1_height ? 0 : h1_height - scroll_top;
     if (top != side_panel_top)
     {

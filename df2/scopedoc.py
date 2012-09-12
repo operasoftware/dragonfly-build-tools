@@ -206,7 +206,7 @@ def print_service(fp, services, service):
     for ev in evs: print_event(fp, getattr(service, ev))
     fp.write("</div>\n")
 
-def print_index(fp, services_dict):
+def print_index(fp, services_dict, dest):
     fp.write(HEAD_INDEX)
     services = services_dict.items()
     services.sort(key= lambda s: s[0])
@@ -221,6 +221,7 @@ def print_index(fp, services_dict):
         versions.sort(key=lambda s: s.service.major_version, reverse=True)
         latest = versions[0]
         latest_versions.append(H2_INDEX  % (latest.file_name, name, latest.service.version))
+        shutil.copyfile(os.path.join(dest, latest.file_name), os.path.join(dest, "%s.html" % name))
         for version in versions:
             if version == latest:
                 args = name, version.file_name, name, version.service.version
@@ -244,12 +245,12 @@ def scope_doc(args):
     if not os.path.exists(args.dest): os.mkdir(args.dest)
     proto_paths = [args.src] if os.path.isfile(args.src) else utils.get_proto_files(args.src)
     services = get_scope_services(proto_paths, args.dest)
-    with open(os.path.join(args.dest, "index.html"), "wb") as fp:
-         print_index(fp, services)
     for service in services.values():
         for version in service.values():
             with open(version.html_path, "wb") as fp:
                 print_service(fp, services, version.service)
+    with open(os.path.join(args.dest, "index.html"), "wb") as fp:
+         print_index(fp, services, args.dest)
     copy_html_src(os.path.join(SOURCE_ROOT, RESOURCES), args.dest)
 
 def setup_subparser(subparsers, config):
