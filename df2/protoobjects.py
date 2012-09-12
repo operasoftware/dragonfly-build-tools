@@ -177,6 +177,10 @@ class EnumField(Type, DocLines):
         self.comment = comment
 
 class Service(DocLines):
+    MAJOR_VERSION = 0
+    MINOR_VERSION = 1
+    PATCH_VERSION = 2
+
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name
         self.parent_scope = parent_scope
@@ -186,10 +190,30 @@ class Service(DocLines):
         self.doc = doc
         self.comment = comment
 
+    def _set_version_array(self):
+        self._version_array = map(int, self.version.split("."))
+        if len(self._version_array) == 2: self._version_array.append(0)
+        return self._version_array
+
     @property
     def version(self):
         try: return self.options.version.value.strip("\"")
         except AttributeError: return ""
+
+    @property
+    def major_version(self):
+        try: return self._version_array[self.MAJOR_VERSION]
+        except AttributeError: return self._set_version_array()[self.MAJOR_VERSION]
+
+    @property
+    def minor_version(self):
+        try: return self._version_array[self.MINOR_VERSION]
+        except AttributeError: return self._set_version_array()[self.MINOR_VERSION]
+
+    @property
+    def patch_version(self):
+        try: return self._version_array[self.PATCH_VERSION]
+        except AttributeError: return self._set_version_array()[self.PATCH_VERSION]
 
     @property
     def command_names(self):

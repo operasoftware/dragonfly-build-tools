@@ -12,7 +12,6 @@ html, body
 body
 {
   position: relative;
-
 }
 
 ul
@@ -44,7 +43,8 @@ pre a:hover
   color: hsl(0, 0%, 0%);
 }
 
-.index-view h2
+.index-view h2,
+.index-view h3
 {
   clear: both;
 }
@@ -70,6 +70,8 @@ pre a:hover
   xwidth: 4ex;
 }
 
+
+
 .message .doc
 {
   color: hsl(0, 0%, 30%);
@@ -79,10 +81,7 @@ pre a:hover
 .last-created
 {
   margin: 0;
-  margin-right: 82px;
-  margin-top: 40px;
-  padding-bottom: 20px;
-  text-align: right;
+  padding-top: 95px;
   font-size: 10px;
 }
 
@@ -116,8 +115,8 @@ h1
   float: right;
 }
 
-.sidepanel,
-#logo
+
+.sidepanel
 {
   padding: 10px;
   width: 230px;
@@ -130,7 +129,17 @@ h1
 
 #logo
 {
+  position: absolute;
+  left: 0;
+  bottom: 20px;
+  width: 230px;
+  height: 100px;
   background: transparent url(img-press-logo.png) 0 100% no-repeat;
+}
+
+.all-versions
+{
+  margin: 3em 0;
 }
 
 .main-view,
@@ -209,12 +218,13 @@ x.field:last-of-type
 .note
 {
   display: inline-block;
-  background-color: hsl(0, 0%, 50%);
+  background-color: #59F;
   content: "i";
   color: #fff;
   font-weight: bold;
   font-family: serif;
   font-style: italic;
+  font-size: 13px;
   width: 14px;
   height: 14px;
   text-align: center;
@@ -263,5 +273,31 @@ h3
 h2:target::after
 {
   margin-top: 3px;
+}
+
+h3:target::after
+{
+margin-right: -19px;
+margin-top: -17px;
+}
+
+.back a
+{
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0;
+  background-image: linear-gradient(-45deg, #000 0px,
+                                             #000 4px,
+                                             transparent 4px),
+                   linear-gradient(-135deg, #000 0px,
+                                             #000 4px,
+                                             transparent 4px),
+                   linear-gradient(0deg, #000 0px,
+                                           #000 0px);
+  background-position: 0px 1px, 0px 8px, 6px 6px;
+  background-size: 7px 7px, 7px 7px, 7px 4px;
+  background-repeat: no-repeat;
 }
 

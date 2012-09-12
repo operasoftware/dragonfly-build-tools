@@ -7,35 +7,47 @@ import protoobjects
 import utils
 import minirest
 
+
+def get_timestamp(): return time.strftime("%A, %d %b %Y %H:%M", time.localtime())
+
 INDENT = "  "
-
-
-
 def indent(count): return count * INDENT
 
-class GetID(object):
-    def __init__(self, tmpl):
-        self._count = 0
-        self._tmpl = tmpl
-
-    def get_id(self):
-        self._count += 1
-        return self._tmpl % self._count
-
-_get_line_id = GetID("code-line-%s").get_id
+def get_field_id(cmd_or_ev_name, recurse_list, field=""):
+    if field:
+        return "%s.%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)), field.name)
+    return "%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)))
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CSS_CLASSES = {protoobjects.NUMBER: "number",
                protoobjects.BUFFER: "string",
                protoobjects.BOOLEAN: "boolean"}
-
 RESOURCES = "doc_resources"
+# index page
 HEAD_INDEX = """<!doctype html>
 <title>Scope Interface</title>
 <link rel="stylesheet" href="./style/style.css">
 <script src="./script/script.js"></script>
-<h1>Scope Interface</h1>
+<h1>Scope Interface <span class="service-version">STP/1</span></h1>
 """
+SIDEPANEL_INDEX = """<div class="sidepanel">
+<h3>All versions</h3>
+<ul class=\"all-service-versions\">
+%s
+</ul>
+<div id="logo"><p class="last-created">%s</p></div>
+</div>
+"""
+MAIN_INDEX = """<div class="index-view">
+%s
+<h2 class="all-versions">All versions</h2>
+%s
+</div>
+"""
+H2_INDEX = """<h2><a href="%s">%s <span class="service-version">%s</span></a></h2>"""
+H3_INDEX = """<h3 id="%s"><a href="%s">%s <span class="service-version">%s</span></a></h3>"""
+H3_INDEX_ONLY_VERSION = """<h3><a href="%s">&nbsp;<span class="service-version">%s</span></a></h3>"""
+# service interface
 HEAD = """<!doctype html>
 <title>%s.%s</title>
 <link rel="stylesheet" href="./style/style.css">
@@ -44,6 +56,7 @@ HEAD = """<!doctype html>
 H1 = """<h1>%s<span class="service-version">%s</spnan></h1>\n"""
 H2 = """<h2 id="%s"><a href="#%s">%s</a></h2>\n"""
 SIDEPANEL = """<div class="sidepanel">
+<p class="back"><a href="./index.html">back</a></p>
 <h3>Commands</h3>
 <ul class="commands">
 %s
@@ -100,14 +113,10 @@ ENUM = "".join(("<pre class=\"code-line\" id=\"%s\">",
                  "</a>",
                  "</pre>"))
 
-class Service(object):
+class ServiceDoc(object):
     def __init__(self, global_scope, protopath, dest):
         service = global_scope.service
         self.service = service
-        version = map(int, service.version.split("."))
-        if len(version) == 2: version.append(0)
-        self.sort_key = 1e8 * version[0] + 1e4 * version[1] + version[2]
-        self.service_version = version
         self.protopath = protopath
         self.file_name = "%s.%s.html" % (service.name, service.version)
         self.html_path = os.path.join(dest, self.file_name)
@@ -125,62 +134,64 @@ def print_doc(fp, obj, depth=0):
         fp.write(minirest.process(obj.doc_lines).serialize())
         fp.write("</div>")
 
-def print_enum(fp, enum):
+def print_enum(fp, cmd_or_ev_name, enum, recurse_list):
     fp.write("<div class=\"enum\">\n")
     fp.write("<pre class=\"code-line\">{</pre>\n")
     fp.write("<ul>")
     for field in enum.fields:
         fp.write("<li class=\"field\">\n")
-        line_id = _get_line_id()
-        fp.write(ENUM % (line_id, line_id, field.name, field.key))
+        field_id = get_field_id(cmd_or_ev_name, recurse_list, field)
+        fp.write(ENUM % (field_id, field_id, field.name, field.key))
         print_doc(fp, field)
         fp.write("</li>\n")
     fp.write("</ul>\n")
     fp.write("<pre class=\"code-line\">}</pre>\n")
     fp.write("</div>")
 
-def print_message(fp, msg, depth=0, recurse_list=[]):
+def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
     fp.write("<div class=\"message\">\n")
     fp.write("<pre class=\"code-line\">{</pre>\n")
     fp.write("<ul>")
     for field in msg.fields:
-        line_id = _get_line_id()
+        field_id = get_field_id(cmd_or_ev_name, recurse_list, field)
         fp.write("<li class=\"field\">\n")
         f_type = field.type
         css_class = CSS_CLASSES[f_type.sup_type] if f_type.sup_type in CSS_CLASSES else ""
         default_val = " [default = %s]" % field.default_value if field.default_value else ""
-        args = line_id, line_id, field.q, css_class, field.full_type_name, field.name, field.key, default_val
+        args = field_id, field_id, field.q, css_class, field.full_type_name, field.name, field.key, default_val
         fp.write(FIELD % args)
         print_doc(fp, field, depth)
         if f_type.sup_type == protoobjects.MESSAGE:
             if not f_type in recurse_list:
-                print_message(fp, f_type, depth, recurse_list[:] + [field.type])
+                print_message(fp, cmd_or_ev_name, f_type, depth, recurse_list[:] + [field.type])
         if f_type.sup_type == protoobjects.ENUM:
-            print_enum(fp, f_type)
+            print_enum(fp, cmd_or_ev_name, f_type, recurse_list)
         fp.write("</li>\n")
-
     fp.write("</ul>\n")
     fp.write("<pre class=\"code-line\">}</pre>\n")
     fp.write("</div>")
 
 def print_command(fp, command):
     fp.write(H2 % (command.name, command.name, command.name))
-    line_id = _get_line_id()
-    fp.write(COMMAND % (line_id, line_id, command.name, command.request_arg.name))
-    print_message(fp, command.request_arg)
-    line_id = _get_line_id()
-    fp.write(RETURNS % (line_id, line_id, command.response_arg.name))
-    print_message(fp, command.response_arg)
-    line_id = _get_line_id()
-    fp.write(KEY % (line_id, line_id, command.key))
+    recurse_list = [command.request_arg]
+    field_id = get_field_id(command.name, recurse_list)
+    fp.write(COMMAND % (field_id, field_id, command.name, command.request_arg.name))
+    print_message(fp, command.name, command.request_arg, recurse_list=recurse_list)
+    recurse_list = [command.response_arg]
+    field_id = get_field_id(command.name, recurse_list)
+    fp.write(RETURNS % (field_id, field_id, command.response_arg.name))
+    print_message(fp, command.name, command.response_arg, recurse_list=recurse_list)
+    field_id = "%s.key" % command.name
+    fp.write(KEY % (field_id, field_id, command.key))
 
 def print_event(fp, event):
     fp.write(H2 % (event.name, event.name, event.name))
-    line_id = _get_line_id()
-    fp.write(EVENT % (line_id, line_id, event.name, event.response_arg.name))
-    print_message(fp, event.response_arg)
-    line_id = _get_line_id()
-    fp.write(KEY % (line_id, line_id, event.key))
+    recurse_list = [event.response_arg]
+    field_id = get_field_id(event.name, recurse_list)
+    fp.write(EVENT % (field_id, field_id, event.name, event.response_arg.name))
+    print_message(fp, event.name, event.response_arg, recurse_list=recurse_list)
+    field_id = "%s.key" % event.name
+    fp.write(KEY % (field_id, field_id, event.key))
 
 def print_service(fp, services, service):
     fp.write(HEAD % (service.name, service.version))
@@ -199,24 +210,26 @@ def print_index(fp, services_dict):
     fp.write(HEAD_INDEX)
     services = services_dict.items()
     services.sort(key= lambda s: s[0])
-    fp.write("<div id=\"logo\"></div>\n")
-    fp.write("<div class=\"index-view\">\n")
+    all_versions_list = []
+    latest_versions = []
+    all_versions = []
     for name, versions_dict in services:
-
-        versions = versions_dict.items()
-        versions.sort(key=lambda s: s[1].service_version[2], reverse=True)
-        versions.sort(key=lambda s: s[1].service_version[1], reverse=True)
-        versions.sort(key=lambda s: s[1].service_version[0], reverse=True)
-        service = versions.pop(0)[1]
-        fp.write("<h2><a href=\"%s\">%s <span class=\"service-version\">%s</span></a></h2>" % (service.file_name, name, service.service.version))
-        #fp.write("<ul class=\"versions\">")
-        #for version, service in versions:
-        #    fp.write("<li>%s</li>" % version)
-        #fp.write("</ul>")
-    fp.write("</div>\n")
-
-
-
+        all_versions_list.append(SIDEPANLE_LINK % (name, name))
+        versions = versions_dict.values()
+        versions.sort(key=lambda s: s.service.patch_version, reverse=True)
+        versions.sort(key=lambda s: s.service.minor_version, reverse=True)
+        versions.sort(key=lambda s: s.service.major_version, reverse=True)
+        latest = versions[0]
+        latest_versions.append(H2_INDEX  % (latest.file_name, name, latest.service.version))
+        for version in versions:
+            if version == latest:
+                args = name, version.file_name, name, version.service.version
+                all_versions.append(H3_INDEX % args)
+            else:
+                args = version.file_name, version.service.version
+                all_versions.append(H3_INDEX_ONLY_VERSION % args)
+    fp.write(SIDEPANEL_INDEX % ("".join(all_versions_list), get_timestamp()))
+    fp.write(MAIN_INDEX % ("".join(latest_versions), "".join(all_versions)))
 
 def get_scope_services(proto_paths, dest):
     services = {}
@@ -224,7 +237,7 @@ def get_scope_services(proto_paths, dest):
         with open(path, "rb") as fp:
             g_scope = protoparser.parse(fp.read())
             service = services.setdefault(g_scope.service.name, {})
-            service[g_scope.service.version] = Service(g_scope, path, dest)
+            service[g_scope.service.version] = ServiceDoc(g_scope, path, dest)
     return services
 
 def scope_doc(args):
@@ -238,7 +251,6 @@ def scope_doc(args):
             with open(version.html_path, "wb") as fp:
                 print_service(fp, services, version.service)
     copy_html_src(os.path.join(SOURCE_ROOT, RESOURCES), args.dest)
-
 
 def setup_subparser(subparsers, config):
     subp = subparsers.add_parser("scope-doc", help="Create scope interface documentation.")
