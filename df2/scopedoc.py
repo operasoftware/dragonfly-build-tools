@@ -7,7 +7,6 @@ import protoobjects
 import utils
 import minirest
 
-
 def get_timestamp(): return time.strftime("%A, %d %b %Y %H:%M", time.localtime())
 
 INDENT = "  "
@@ -45,7 +44,7 @@ MAIN_INDEX = """<div class="index-view">
 </div>
 """
 H2_INDEX = """<h2><a href="%s">%s <span class="service-version">%s</span></a></h2>"""
-H3_INDEX = """<h3 id="%s"><a href="%s">%s <span class="service-version">%s</span></a></h3>"""
+H3_INDEX = """<li><h3 id="%s"><a href="%s">%s <span class="service-version">%s</span></a></h3></li>"""
 H3_INDEX_ONLY_VERSION = """<h3><a href="%s">&nbsp;<span class="service-version">%s</span></a></h3>"""
 # service interface
 HEAD = """<!doctype html>
@@ -80,23 +79,23 @@ COMMAND = "".join(("<pre class=\"code-line\" id=\"%s\">",
                    "</pre>"))
 RETURNS = "".join(("<pre class=\"code-line\" id=\"%s\">",
                    "<a href=\"#%s\">",
-                  "<span class=\"keyword\">returns</span>",
-                  " (<span class=\"message-name\">%s</span>)",
-                   "</a>",
-                  "</pre>"))
-KEY = "".join(("<pre class=\"code-line\" id=\"%s\">",
-               "<a href=\"#%s\">",
-                 "<span class=\"proto-key\">= %s;</span>",
-                "</a>",
-                 "</pre>"))
-EVENT = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                   "<a href=\"#%s\">",
-                   "<span class=\"keyword\">event</span>",
-                   " <span class=\"command-name\">%s</span>",
-                   "<span class=\"keyword\"> returns </span>",
-                   "(<span class=\"message-name\">%s</span>)",
+                   "<span class=\"keyword\">returns</span>",
+                   " (<span class=\"message-name\">%s</span>)",
                    "</a>",
                    "</pre>"))
+KEY = "".join(("<pre class=\"code-line\" id=\"%s\">",
+               "<a href=\"#%s\">",
+               "<span class=\"proto-key\">= %s;</span>",
+               "</a>",
+               "</pre>"))
+EVENT = "".join(("<pre class=\"code-line\" id=\"%s\">",
+                 "<a href=\"#%s\">",
+                 "<span class=\"keyword\">event</span>",
+                 " <span class=\"command-name\">%s</span>",
+                 "<span class=\"keyword\"> returns </span>",
+                 "(<span class=\"message-name\">%s</span>)",
+                 "</a>",
+                 "</pre>"))
 FIELD = "".join(("<pre class=\"code-line\" id=\"%s\">",
                  "%s",
                  "<a href=\"#%s\">",
@@ -109,13 +108,13 @@ FIELD = "".join(("<pre class=\"code-line\" id=\"%s\">",
                  "</a>",
                  "</pre>"))
 ENUM = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                 "<a href=\"#%s\">",
-                 "<span class=\"enum-name\">%s</span>",
-                 "<span class=\"proto-key\"> = </span>",
-                 "<span class=\"enum-key\">%s</span>",
-                 "<span class=\"proto-key\">;</span>",
-                 "</a>",
-                 "</pre>"))
+                "<a href=\"#%s\">",
+                "<span class=\"enum-name\">%s</span>",
+                "<span class=\"proto-key\"> = </span>",
+                "<span class=\"enum-key\">%s</span>",
+                "<span class=\"proto-key\">;</span>",
+                "</a>",
+                "</pre>"))
 EXPANDER = """<span class="expander">&nbsp;</span>"""
 
 class ServiceDoc(object):
@@ -143,6 +142,10 @@ def print_enum(fp, cmd_or_ev_name, enum, recurse_list):
     fp.write("<div class=\"enum\">\n")
     fp.write("<pre class=\"code-line\">{</pre>\n")
     fp.write("<ul>")
+    if enum.doc:
+        fp.write("<li class=\"message-doc\">\n")
+        print_doc(fp, enum)
+        fp.write("</li>\n")
     for field in enum.fields:
         fp.write("<li class=\"field\">\n")
         field_id = get_field_id(cmd_or_ev_name, recurse_list, field)
@@ -157,6 +160,10 @@ def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
     fp.write("<div class=\"message\">\n")
     fp.write("<pre class=\"code-line\">{</pre>\n")
     fp.write("<ul>")
+    if msg.doc:
+        fp.write("<li class=\"message-doc\">\n")
+        print_doc(fp, msg, depth)
+        fp.write("</li>\n")
     for field in msg.fields:
         field_id = get_field_id(cmd_or_ev_name, recurse_list, field)
         fp.write("<li class=\"field\">\n")
@@ -179,6 +186,7 @@ def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
 
 def print_command(fp, command):
     fp.write(H2 % (command.name, command.name, command.name))
+    if command.doc: print_doc(fp, command)
     recurse_list = [command.request_arg]
     field_id = get_field_id(command.name, recurse_list)
     fp.write(COMMAND % (field_id, field_id, command.name, command.request_arg.name))
@@ -192,6 +200,7 @@ def print_command(fp, command):
 
 def print_event(fp, event):
     fp.write(H2 % (event.name, event.name, event.name))
+    if event.doc: print_doc(fp, event)
     recurse_list = [event.response_arg]
     field_id = get_field_id(event.name, recurse_list)
     fp.write(EVENT % (field_id, field_id, event.name, event.response_arg.name))
@@ -226,8 +235,10 @@ def print_index(fp, services_dict, dest):
         versions.sort(key=lambda s: s.service.minor_version, reverse=True)
         versions.sort(key=lambda s: s.service.major_version, reverse=True)
         latest = versions[0]
-        latest_versions.append(H2_INDEX  % (latest.file_name, name, latest.service.version))
-        shutil.copyfile(os.path.join(dest, latest.file_name), os.path.join(dest, "%s.html" % name))
+        latest_file_name = "%s.html" % name
+        latest_versions.append(H2_INDEX  % (latest_file_name, name, latest.service.version))
+        shutil.copyfile(os.path.join(dest, latest.file_name), os.path.join(dest, latest_file_name))
+        all_versions.append("<ul class=\"all-version-list\">\n")
         for version in versions:
             if version == latest:
                 args = name, version.file_name, name, version.service.version
@@ -235,6 +246,7 @@ def print_index(fp, services_dict, dest):
             else:
                 args = version.file_name, version.service.version
                 all_versions.append(H3_INDEX_ONLY_VERSION % args)
+        all_versions.append("</ul>\n")
     fp.write(SIDEPANEL_INDEX % ("".join(all_versions_list), get_timestamp()))
     fp.write(MAIN_INDEX % ("".join(latest_versions), "".join(all_versions)))
 

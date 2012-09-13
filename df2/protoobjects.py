@@ -109,7 +109,7 @@ class Field(Prop, DocLines):
         try: return self.options.default.value
         except AttributeError: return ""
 
-class Message(Type):
+class Message(Type, DocLines):
     sup_type = MESSAGE
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name;
@@ -130,7 +130,7 @@ class Message(Type):
                     obj.get_sub_messages(msgs)
         return msgs
 
-class Command(Type, Prop):
+class Command(Type, Prop, DocLines):
     sup_type = COMMAND
     def __init__(self, name, request_arg, response_arg, key, comment, doc, scope):
         self.name = name
@@ -151,7 +151,7 @@ class Command(Type, Prop):
     def response_arg(self):
         return self._get_obj(self.scope.parent_scope, ["messages"], self._response_arg)
 
-class Event(Type, Prop):
+class Event(Type, Prop, DocLines):
     sup_type = EVENT
     def __init__(self, name, response_arg, key, comment, doc, scope):
         self.name = name
@@ -165,7 +165,7 @@ class Event(Type, Prop):
     def response_arg(self):
         return self._get_obj(self.scope.parent_scope, ["messages"], self._response_arg)
 
-class Enum(Type):
+class Enum(Type, DocLines):
     sup_type = ENUM
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name

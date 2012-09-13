@@ -215,7 +215,8 @@ class NoteTextProcessor(TextProcessor):
     def handle(self, text_node, match):
         span = TextProcessor.handle(self, text_node, match)
         span.text_content = ""
-        span.set_attr("class", "note")
+        span.set_attr("class", "info")
+        span.parent.set_attr("class", "note")
         return span
 
 
