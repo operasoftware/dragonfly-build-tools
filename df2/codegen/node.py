@@ -1,6 +1,6 @@
 INDENT = "  "
 
-def escpae_text_html(str): return str.replace("&", "&amp;").replace("<", "&lt;")
+def escape_text_html(str): return str.replace("&", "&amp;").replace("<", "&lt;")
 
 def escpae_attr_html(str): return str.replace("\"", "&quot;")
 
@@ -72,7 +72,7 @@ class Text(Node):
         return text
 
     def serialize(self, initial_depth=0):
-        return escpae_text_html(self.value)
+        return escape_text_html(self.value)
 
 class Element(Node):
     type = Node.ELEMENT
