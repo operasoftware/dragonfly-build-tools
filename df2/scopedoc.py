@@ -116,7 +116,7 @@ ENUM = "".join(("<pre class=\"code-line\" id=\"%s\">",
                  "<span class=\"proto-key\">;</span>",
                  "</a>",
                  "</pre>"))
-EXPANDER = """<span class="expander">&#x25BC;</span>"""
+EXPANDER = """<span class="expander">&nbsp;</span>"""
 
 class ServiceDoc(object):
     def __init__(self, global_scope, protopath, dest):

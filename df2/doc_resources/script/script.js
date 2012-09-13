@@ -44,14 +44,12 @@
 
   var collapse = function(button)
   {
-      button.textContent = "\u25B6";
-      button.get_ancestor(".field").classList.add("collapsed");
+    button.get_ancestor(".field").classList.add("collapsed");
   };
 
   var expand = function(button)
   {
-      button.textContent = "\u25BC";
-      button.get_ancestor(".field").classList.remove("collapsed");
+    button.get_ancestor(".field").classList.remove("collapsed");
   };
 
   var click_handler = function(event)

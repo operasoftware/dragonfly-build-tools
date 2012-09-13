@@ -125,15 +125,11 @@ h1
   top: 0;
   bottom: 0;
   overflow: auto;
-  padding-bottom: 20px;
 }
 
 .setting
 {
-  position: absolute;
-  left: 0;
-  bottom: 0px;
-  width: 230px;
+  margin-top: 20px;
   height: 20px;
   font-size: 10px;
   line-height: 20px;
@@ -319,17 +315,22 @@ margin-top: -17px;
 }
 
 /* expander */
+
 .expander
 {
   display: inline-block;
   width: 12px;
   height: 14px;
   margin-left: -12px;
-  text-align: center;
-  color: hsl(0, 0%, 60%);
-  opacity: 0;
   vertical-align: 0;
   cursor: pointer;
+  background: transparent url(arrow.png) 0 -10px no-repeat;
+  opacity: .35;
+}
+
+.collapsed > pre > .expander
+{
+  background-position: 0 2px;
 }
 
 .code-line:hover .expander
