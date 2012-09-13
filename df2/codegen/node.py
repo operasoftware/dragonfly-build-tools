@@ -2,7 +2,7 @@ INDENT = "  "
 
 def escape_text_html(str): return str.replace("&", "&amp;").replace("<", "&lt;")
 
-def escpae_attr_html(str): return str.replace("\"", "&quot;")
+def escape_attr_html(str): return str.replace("\"", "&quot;")
 
 class Node(object):
     ELEMENT = 1
@@ -139,7 +139,7 @@ class Element(Node):
         self.children = [Text(value)]
 
     def serialize(self, initial_depth=0):
-        attrs = "".join((" %s=\"%s\"" % (key, escpae_attr_html(value)) for key, value in self.attrs.items()))
+        attrs = "".join((" %s=\"%s\"" % (key, escape_attr_html(value)) for key, value in self.attrs.items()))
         content = "".join((child.serialize(initial_depth) for child in self.children))
         name = self.name
         indent = (initial_depth + self.depth) * INDENT
