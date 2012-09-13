@@ -12,10 +12,12 @@ def get_timestamp(): return time.strftime("%A, %d %b %Y %H:%M", time.localtime()
 INDENT = "  "
 def indent(count): return count * INDENT
 
+def join(*args): return "".join(args)
+
 def get_field_id(cmd_or_ev_name, recurse_list, field=""):
     if field:
-        return "%s.%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)), field.name)
-    return "%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)))
+        return "%s.%s.%s" % (cmd_or_ev_name, join(*(m.name for m in recurse_list)), field.name)
+    return "%s.%s" % (cmd_or_ev_name, join(*(m.name for m in recurse_list)))
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CSS_CLASSES = {protoobjects.NUMBER: "number",
@@ -69,53 +71,55 @@ SIDEPANEL = """<div class="sidepanel">
  </div>
 </div>
 """
-SIDEPANLE_LINK = """<li><a href="#%s">%s</a></li>\n"""
-COMMAND = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                   "<a href=\"#%s\">",
-                   "<span class=\"keyword\">command</span>",
-                   " <span class=\"command-name\">%s</span>",
-                   "(<span class=\"message-name\">%s</span>)",
-                   "</a>",
-                   "</pre>"))
-RETURNS = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                   "<a href=\"#%s\">",
-                   "<span class=\"keyword\">returns</span>",
-                   " (<span class=\"message-name\">%s</span>)",
-                   "</a>",
-                   "</pre>"))
-KEY = "".join(("<pre class=\"code-line\" id=\"%s\">",
+SIDEPANEL_LINK = """<li><a href="#%s">%s</a></li>\n"""
+COMMAND = join("<pre class=\"code-line\" id=\"%s\">",
                "<a href=\"#%s\">",
-               "<span class=\"proto-key\">= %s;</span>",
+               "<span class=\"keyword\">command</span>",
+               " <span class=\"command-name\">%s</span>",
+               "(<span class=\"message-name\">%s</span>)",
                "</a>",
-               "</pre>"))
-EVENT = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                 "<a href=\"#%s\">",
-                 "<span class=\"keyword\">event</span>",
-                 " <span class=\"command-name\">%s</span>",
-                 "<span class=\"keyword\"> returns </span>",
-                 "(<span class=\"message-name\">%s</span>)",
-                 "</a>",
-                 "</pre>"))
-FIELD = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                 "%s",
-                 "<a href=\"#%s\">",
-                 "<span class=\"qualifier\">%s</span>",
-                 " <span class=\"%s\">%s</span>",
-                 " <span class=\"field-name\">%s</span>",
-                 "<span class=\"proto-key\"> = %s</span>",
-                 "%s",
-                 "<span class=\"proto-key\">;</span>",
-                 "</a>",
-                 "</pre>"))
-ENUM = "".join(("<pre class=\"code-line\" id=\"%s\">",
-                "<a href=\"#%s\">",
-                "<span class=\"enum-name\">%s</span>",
-                "<span class=\"proto-key\"> = </span>",
-                "<span class=\"enum-key\">%s</span>",
-                "<span class=\"proto-key\">;</span>",
-                "</a>",
-                "</pre>"))
+               "</pre>")
+RETURNS = join("<pre class=\"code-line\" id=\"%s\">",
+               "<a href=\"#%s\">",
+               "<span class=\"keyword\">returns</span>",
+               " (<span class=\"message-name\">%s</span>)",
+               "</a>",
+               "</pre>")
+KEY = join("<pre class=\"code-line\" id=\"%s\">",
+           "<a href=\"#%s\">",
+           "<span class=\"proto-key\">= %s;</span>",
+           "</a>",
+           "</pre>")
+EVENT = join("<pre class=\"code-line\" id=\"%s\">",
+             "<a href=\"#%s\">",
+             "<span class=\"keyword\">event</span>",
+             " <span class=\"command-name\">%s</span>",
+             "<span class=\"keyword\"> returns </span>",
+             "(<span class=\"message-name\">%s</span>)",
+             "</a>",
+             "</pre>")
+FIELD = join("<pre class=\"code-line\" id=\"%s\">",
+             "%s",
+             "<a href=\"#%s\">",
+             "<span class=\"qualifier\">%s</span>",
+             " <span class=\"%s\">%s</span>",
+             " <span class=\"field-name\">%s</span>",
+             "<span class=\"proto-key\"> = %s</span>",
+             "%s",
+             "<span class=\"proto-key\">;</span>",
+             "</a>",
+             "</pre>")
+ENUM = join("<pre class=\"code-line\" id=\"%s\">",
+            "<a href=\"#%s\">",
+            "<span class=\"enum-name\">%s</span>",
+            "<span class=\"proto-key\"> = </span>",
+            "<span class=\"enum-key\">%s</span>",
+            "<span class=\"proto-key\">;</span>",
+            "</a>",
+            "</pre>")
 EXPANDER = """<span class="expander">&nbsp;</span>"""
+CURLY_OPEN = """<pre class="code-line">{</pre>\n"""
+CURLY_CLOSE = """<pre class="code-line">}</pre>\n"""
 
 class ServiceDoc(object):
     def __init__(self, global_scope, protopath, dest):
@@ -140,7 +144,7 @@ def print_doc(fp, obj, depth=0):
 
 def print_enum(fp, cmd_or_ev_name, enum, recurse_list):
     fp.write("<div class=\"enum\">\n")
-    fp.write("<pre class=\"code-line\">{</pre>\n")
+    fp.write(CURLY_OPEN)
     fp.write("<ul>")
     if enum.doc:
         fp.write("<li class=\"message-doc\">\n")
@@ -153,12 +157,12 @@ def print_enum(fp, cmd_or_ev_name, enum, recurse_list):
         print_doc(fp, field)
         fp.write("</li>\n")
     fp.write("</ul>\n")
-    fp.write("<pre class=\"code-line\">}</pre>\n")
+    fp.write(CURLY_CLOSE)
     fp.write("</div>")
 
 def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
     fp.write("<div class=\"message\">\n")
-    fp.write("<pre class=\"code-line\">{</pre>\n")
+    fp.write(CURLY_OPEN)
     fp.write("<ul>")
     if msg.doc:
         fp.write("<li class=\"message-doc\">\n")
@@ -181,7 +185,7 @@ def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
             print_enum(fp, cmd_or_ev_name, f_type, recurse_list)
         fp.write("</li>\n")
     fp.write("</ul>\n")
-    fp.write("<pre class=\"code-line\">}</pre>\n")
+    fp.write(CURLY_CLOSE)
     fp.write("</div>")
 
 def print_command(fp, command):
@@ -213,9 +217,9 @@ def print_service(fp, services, service):
     fp.write(H1 % (service.name, service.version))
     commands = service.command_names
     events = service.event_names
-    command_links = (SIDEPANLE_LINK % (cmd, cmd) for cmd in commands)
-    event_links = (SIDEPANLE_LINK % (ev, ev) for ev in events)
-    fp.write(SIDEPANEL % ("".join(command_links), "".join(event_links)))
+    command_links = (SIDEPANEL_LINK % (cmd, cmd) for cmd in commands)
+    event_links = (SIDEPANEL_LINK % (ev, ev) for ev in events)
+    fp.write(SIDEPANEL % (join(*command_links), join(*event_links)))
     fp.write("<div class=\"main-view\">\n")
     if service.doc: print_doc(fp, service)
     for cmd in commands: print_command(fp, getattr(service, cmd))
@@ -230,11 +234,10 @@ def print_index(fp, services_dict, dest):
     latest_versions = []
     all_versions = []
     for name, versions_dict in services:
-        all_versions_list.append(SIDEPANLE_LINK % (name, name))
+        all_versions_list.append(SIDEPANEL_LINK % (name, name))
         versions = versions_dict.values()
-        versions.sort(key=lambda s: s.service.patch_version, reverse=True)
-        versions.sort(key=lambda s: s.service.minor_version, reverse=True)
-        versions.sort(key=lambda s: s.service.major_version, reverse=True)
+        for version in ["patch_version", "minor_version", "major_version"]:
+            versions.sort(key=lambda s: getattr(s.service, version), reverse=True)
         latest = versions[0]
         latest_file_name = "%s.html" % name
         latest_versions.append(H2_INDEX  % (latest_file_name, name, latest.service.version))
@@ -248,8 +251,8 @@ def print_index(fp, services_dict, dest):
                 args = version.file_name, version.service.version
                 all_versions.append(H3_INDEX_ONLY_VERSION % args)
         all_versions.append("</ul>\n")
-    fp.write(SIDEPANEL_INDEX % ("".join(all_versions_list), get_timestamp()))
-    fp.write(MAIN_INDEX % ("".join(latest_versions), "".join(all_versions)))
+    fp.write(SIDEPANEL_INDEX % (join(*all_versions_list), get_timestamp()))
+    fp.write(MAIN_INDEX % (join(*latest_versions), join(*all_versions)))
 
 def get_scope_services(proto_paths, dest):
     services = {}

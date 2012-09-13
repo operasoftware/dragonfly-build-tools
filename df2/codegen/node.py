@@ -20,7 +20,7 @@ class Node(object):
 
     def insert_after(self, node):
         try: self.next.insert_before(node)
-        except: self.parent.append(node)
+        except AttributeError: self.parent.append(node)
         return node
 
     @property
@@ -99,7 +99,7 @@ class Element(Node):
         node = self.first_child
         text_node = None
         while node:
-            if node.type == Node.TEXT:
+            if node.is_text:
                 if text_node:
                     text_node.value += node.parent.remove(node).value
                     node = text_node
@@ -130,8 +130,8 @@ class Element(Node):
     def text_content(self):
         text = []
         for child in self.children:
-            if child.type == Node.TEXT: text.append(child.value)
-            elif child.type == Node.ELEMENT: text.append(child.text_content)
+            if child.is_text: text.append(child.value)
+            elif child.is_element: text.append(child.text_content)
         return "".join(text)
 
     @text_content.setter
