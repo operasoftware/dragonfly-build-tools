@@ -211,14 +211,15 @@ def print_event(fp, event):
 def print_service(fp, services, service):
     fp.write(HEAD % (service.name, service.version))
     fp.write(H1 % (service.name, service.version))
-    cmds = service.command_names
-    evs = service.event_names
-    fp.write(SIDEPANEL % ("\n".join((SIDEPANLE_LINK % (cmd, cmd) for cmd in cmds)),
-                          "\n".join((SIDEPANLE_LINK % (ev, ev) for ev in evs))))
+    commands = service.command_names
+    events = service.event_names
+    command_links = (SIDEPANLE_LINK % (cmd, cmd) for cmd in commands)
+    event_links = (SIDEPANLE_LINK % (ev, ev) for ev in events)
+    fp.write(SIDEPANEL % ("".join(command_links), "".join(event_links)))
     fp.write("<div class=\"main-view\">\n")
     if service.doc: print_doc(fp, service)
-    for cmd in cmds: print_command(fp, getattr(service, cmd))
-    for ev in evs: print_event(fp, getattr(service, ev))
+    for cmd in commands: print_command(fp, getattr(service, cmd))
+    for ev in events: print_event(fp, getattr(service, ev))
     fp.write("</div>\n")
 
 def print_index(fp, services_dict, dest):

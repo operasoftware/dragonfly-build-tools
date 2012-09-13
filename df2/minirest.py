@@ -219,7 +219,6 @@ class NoteTextProcessor(TextProcessor):
         span.parent.set_attr("class", "note")
         return span
 
-
 class LinkTextProcessor(TextProcessor):
     re = reg_exp(r"[^ ]{4,5}://[^ ]+")
     name = "a"
