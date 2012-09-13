@@ -10,9 +10,9 @@ import verifyids
 import showconfig
 import build
 import cleanrepo
-import msgdefs
-import jsclasses
-import scopedoc
+import codegen.msgdefs as msdefs
+import codegen.jsclasses as jsclasses
+import codegen.scopedoc as scopedoc
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,7 +56,6 @@ def main():
 		module = g.get(name)
 		if hasattr(module, "setup_subparser"):
 			getattr(module, "setup_subparser")(subparsers, config)
-
 	args = parser.parse_args()
 	args.func(args)
 

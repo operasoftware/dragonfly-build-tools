@@ -21,7 +21,7 @@ SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CSS_CLASSES = {protoobjects.NUMBER: "number",
                protoobjects.BUFFER: "string",
                protoobjects.BOOLEAN: "boolean"}
-RESOURCES = "doc_resources"
+RESOURCES = "resources"
 # index page
 HEAD_INDEX = """<!doctype html>
 <title>Scope Interface</title>
