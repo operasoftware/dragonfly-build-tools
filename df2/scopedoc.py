@@ -65,6 +65,9 @@ SIDEPANEL = """<div class="sidepanel">
 <ul class="events">
 %s
 </ul>
+<div title="Hint: hold shift to unfold all sub messages" class="setting">
+ <label><input type="checkbox" class="default-collapse"> collapse all by default</label>
+ </div>
 </div>
 """
 SIDEPANLE_LINK = """<li><a href="#%s">%s</a></li>\n"""
@@ -95,6 +98,7 @@ EVENT = "".join(("<pre class=\"code-line\" id=\"%s\">",
                    "</a>",
                    "</pre>"))
 FIELD = "".join(("<pre class=\"code-line\" id=\"%s\">",
+                 "%s",
                  "<a href=\"#%s\">",
                  "<span class=\"qualifier\">%s</span>",
                  " <span class=\"%s\">%s</span>",
@@ -112,6 +116,7 @@ ENUM = "".join(("<pre class=\"code-line\" id=\"%s\">",
                  "<span class=\"proto-key\">;</span>",
                  "</a>",
                  "</pre>"))
+EXPANDER = """<span class="expander">&#x25BC;</span>"""
 
 class ServiceDoc(object):
     def __init__(self, global_scope, protopath, dest):
@@ -156,15 +161,16 @@ def print_message(fp, cmd_or_ev_name, msg, depth=0, recurse_list=[]):
         field_id = get_field_id(cmd_or_ev_name, recurse_list, field)
         fp.write("<li class=\"field\">\n")
         f_type = field.type
+        has_expander = (f_type.is_message and not f_type in recurse_list) or f_type.is_enum
+        expander = EXPANDER if has_expander else ""
         css_class = CSS_CLASSES[f_type.sup_type] if f_type.sup_type in CSS_CLASSES else ""
         default_val = " [default = %s]" % field.default_value if field.default_value else ""
-        args = field_id, field_id, field.q, css_class, field.full_type_name, field.name, field.key, default_val
+        args = field_id, expander, field_id, field.q, css_class, field.full_type_name, field.name, field.key, default_val
         fp.write(FIELD % args)
         print_doc(fp, field, depth)
-        if f_type.sup_type == protoobjects.MESSAGE:
-            if not f_type in recurse_list:
-                print_message(fp, cmd_or_ev_name, f_type, depth, recurse_list[:] + [field.type])
-        if f_type.sup_type == protoobjects.ENUM:
+        if f_type.is_message and not f_type in recurse_list:
+            print_message(fp, cmd_or_ev_name, f_type, depth, recurse_list[:] + [field.type])
+        if f_type.is_enum:
             print_enum(fp, cmd_or_ev_name, f_type, recurse_list)
         fp.write("</li>\n")
     fp.write("</ul>\n")

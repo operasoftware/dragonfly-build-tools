@@ -125,6 +125,23 @@ h1
   top: 0;
   bottom: 0;
   overflow: auto;
+  padding-bottom: 20px;
+}
+
+.setting
+{
+  position: absolute;
+  left: 0;
+  bottom: 0px;
+  width: 230px;
+  height: 20px;
+  font-size: 10px;
+  line-height: 20px;
+}
+
+.setting input
+{
+  vertical-align: middle;
 }
 
 #logo
@@ -301,3 +318,27 @@ margin-top: -17px;
   background-repeat: no-repeat;
 }
 
+/* expander */
+.expander
+{
+  display: inline-block;
+  width: 12px;
+  height: 14px;
+  margin-left: -12px;
+  text-align: center;
+  color: hsl(0, 0%, 60%);
+  opacity: 0;
+  vertical-align: 0;
+  cursor: pointer;
+}
+
+.code-line:hover .expander
+{
+  opacity: 1;
+}
+
+.collapsed > .message,
+.collapsed > .enum
+{
+  display: none;
+}

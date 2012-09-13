@@ -21,8 +21,15 @@ class Type(object):
     sup_type = 0
     name = None
 
-    def is_primitive(self):
-        return self.sup_type in PRIMITIVES
+    @property
+    def is_primitive(self): return self.sup_type in PRIMITIVES
+
+    @property
+    def is_message(self):
+        return self.sup_type == MESSAGE
+
+    @property
+    def is_enum(self): return self.sup_type == ENUM
 
 class UInt32(Type):
     sup_type = NUMBER
@@ -242,4 +249,4 @@ class Global(object):
         self.options = FieldOptions()
         self.parent_scope = None
 
-Type.primitives = (lambda gs: dict([(o.name, o) for o in gs if getattr(o, "sup_type", None) in PRIMITIVES]))(globals().values())
+Type.primitives = (lambda gs: dict([(o.name, o()) for o in gs if getattr(o, "sup_type", None) in PRIMITIVES]))(globals().values())
