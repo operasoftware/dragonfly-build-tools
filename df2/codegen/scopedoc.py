@@ -32,6 +32,7 @@ HEAD_INDEX = """<!doctype html>
 <h1>Scope Interface <span class="service-version">STP/1</span></h1>
 """
 SIDEPANEL_INDEX = """<div class="sidepanel">
+<h3 ><a href="http://operasoftware.github.com/scope-architecure/index.html">Scope Architecure</a></h3>
 <h3>All versions</h3>
 <ul class=\"all-service-versions\">
 %s
