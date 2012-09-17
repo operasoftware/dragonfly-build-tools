@@ -1,0 +1,312 @@
+html, body
+{
+  margin: 0;
+  padding: 0;
+  font: menu;
+  font-size: 12px;
+  min-height: 100%;
+  max-width: 800px;
+  margin: auto;
+}
+
+h1, h2, h3
+{
+  font-weight: normal;
+}
+
+h1
+{
+  font-size: 2.5em;
+  margin: 0;
+  border-bottom: 1px solid hsl(0, 0%, 70%);
+  padding: .5em 8px;
+}
+
+h3
+{
+  margin: 5px 0;
+}
+
+pre
+{
+  margin: 0;
+  font-family: "Consolas", monospace;
+}
+
+a
+{
+  text-decoration: none;
+  color: #000;
+}
+
+a:hover
+{
+  text-decoration: underline;
+}
+
+pre a,
+pre a:hover
+{
+  text-decoration: none;
+}
+
+.doc a
+{
+  color: hsl(0, 0%, 30%);
+}
+
+.service-version
+{
+  float: right;
+}
+
+.sidepanel
+{
+  padding: 10px;
+  width: 230px;
+  border-right: 1px solid hsl(0, 0%, 70%);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  overflow: auto;
+}
+
+.sidepanel ul
+{
+  list-style: none;
+  padding: 0;
+}
+
+.sidepanel a
+{
+  display: block;
+}
+
+.setting
+{
+  margin-top: 20px;
+  height: 20px;
+  font-size: 10px;
+  line-height: 20px;
+}
+
+.setting input
+{
+  vertical-align: middle;
+}
+
+.main-view,
+.index-view
+{
+  margin-left: 250px;
+  padding: 10px;
+  border-left: 1px solid hsl(0, 0%, 70%);
+}
+
+:target::after
+{
+  content: ' ';
+  display: block;
+  float: right;
+  width: 14px;
+  height: 14px;
+  margin-top: 0px;
+  margin-left: -18px;
+  margin-bottom: -20px;
+  background-image: linear-gradient(-45deg, #DD1144 0px, #DD1144 4px, transparent 4px),
+                    linear-gradient(-135deg, #DD1144 0px, #DD1144 4px, transparent 4px),
+                    linear-gradient(0deg, #DD1144 0px, #DD1144 0px);
+  background-position: 0px 1px, 0px 8px, 6px 6px;
+  background-size: 7px 7px, 7px 7px, 7px 4px;
+  background-repeat: no-repeat;
+}
+
+h2:target::after
+{
+  margin-top: 3px;
+}
+
+h3:target::after
+{
+margin-right: -19px;
+margin-top: -17px;
+}
+
+/* index page */
+
+.index-view h2,
+.index-view h3
+{
+  clear: both;
+}
+
+.index-view a
+{
+  display: block;
+  border-bottom: 1px solid transparent;
+}
+
+.index-view a:hover
+{
+  text-decoration: none;
+  border-bottom: 1px solid hsl(0, 0%, 70%);
+}
+
+#logo
+{
+  position: absolute;
+  left: 0;
+  bottom: 20px;
+  width: 230px;
+  height: 100px;
+  background: transparent url(img-press-logo.png) -18px 100% no-repeat;
+}
+
+.last-created
+{
+  margin: 0;
+  padding-top: 95px;
+  padding-left: 10px;
+  font-size: 10px;
+}
+
+.all-versions
+{
+  margin: 3em 0;
+}
+
+.all-version-list
+{
+  margin: 0;
+  list-style: none;
+  clear: both;
+  padding: 0;
+}
+
+.all-version-list a
+{
+  color: hsl(0, 0%, 50%);
+}
+
+.all-version-list:hover a
+{
+  color: #000;
+}
+
+/* interface pages */
+
+.message .doc
+{
+  color: hsl(0, 0%, 30%);
+}
+
+.message ul
+{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-left: 20px;
+}
+
+.field p
+{
+  margin: 5px 0;
+}
+
+.keyword
+{
+  color: #DD1144;
+  font-weight: bold;
+}
+
+.qualifier,
+.enum-name,
+.enum-key
+{
+  color: #DD1144;
+}
+
+.field-name
+{
+  font-weight: bold;
+}
+
+.proto-key,
+.since-version
+{
+  color: hsl(0, 0%, 60%);
+}
+
+.note
+{
+  background-color: hsl(0, 0%, 95%);
+  padding: 2px 3px 2px 20px;
+}
+
+.info
+{
+  display: inline-block;
+  background-color: #59F;
+  content: "i";
+  color: #fff;
+  font-weight: bold;
+  font-family: serif;
+  font-style: italic;
+  font-size: 13px;
+  width: 14px;
+  height: 14px;
+  text-align: center;
+  border-radius: 7px;
+  margin-left: -16px;
+  margin: right: 2px;
+}
+
+code
+{
+  color: #0086B3;
+}
+
+.back a
+{
+  content: " ";
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0;
+  background-image: linear-gradient(-45deg, #000 0px, #000 4px, transparent 4px),
+                    linear-gradient(-135deg, #000 0px, #000 4px, transparent 4px),
+                    linear-gradient(0deg, #000 0px, #000 0px);
+  background-position: 0px 1px, 0px 8px, 6px 6px;
+  background-size: 7px 7px, 7px 7px, 7px 4px;
+  background-repeat: no-repeat;
+}
+
+/* expander */
+
+.expander
+{
+  display: inline-block;
+  width: 12px;
+  height: 14px;
+  margin-left: -12px;
+  vertical-align: 0;
+  cursor: pointer;
+  background: transparent url(arrow.png) 0 -10px no-repeat;
+  opacity: .3;
+}
+
+.collapsed > pre > .expander
+{
+  background-position: 0 2px;
+}
+
+.code-line:hover .expander
+{
+  opacity: 1;
+}
+
+.collapsed > .message,
+.collapsed > .enum
+{
+  display: none;
+}

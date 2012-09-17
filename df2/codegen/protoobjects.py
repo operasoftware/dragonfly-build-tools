@@ -21,8 +21,15 @@ class Type(object):
     sup_type = 0
     name = None
 
-    def is_primitive(self):
-        return self.sup_type in PRIMITIVES
+    @property
+    def is_primitive(self): return self.sup_type in PRIMITIVES
+
+    @property
+    def is_message(self):
+        return self.sup_type == MESSAGE
+
+    @property
+    def is_enum(self): return self.sup_type == ENUM
 
 class UInt32(Type):
     sup_type = NUMBER
@@ -49,10 +56,10 @@ class Bytes(Type):
     name = "bytes"
 
 class DocLines(object):
-    _re_doc_lines = re.compile(r"\r?\n[ \t]*\* ?")
+    _re_doc_lines = re.compile(r"(?:/\*+)?\r?\n[ \t]*\* ?/?")
     @property
     def doc_lines(self):
-        return self._re_doc_lines.split(self.doc.strip(" \t*/\r\n"))
+        return self._re_doc_lines.split(self.doc.strip())
 
 class FieldOptions(object): pass
 
@@ -97,7 +104,12 @@ class Field(Prop, DocLines):
     def full_type_name(self):
         return self._type
 
-class Message(Type):
+    @property
+    def default_value(self):
+        try: return self.options.default.value
+        except AttributeError: return None
+
+class Message(Type, DocLines):
     sup_type = MESSAGE
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name;
@@ -118,7 +130,7 @@ class Message(Type):
                     obj.get_sub_messages(msgs)
         return msgs
 
-class Command(Type, Prop):
+class Command(Type, Prop, DocLines):
     sup_type = COMMAND
     def __init__(self, name, request_arg, response_arg, key, comment, doc, scope):
         self.name = name
@@ -139,7 +151,7 @@ class Command(Type, Prop):
     def response_arg(self):
         return self._get_obj(self.scope.parent_scope, ["messages"], self._response_arg)
 
-class Event(Type, Prop):
+class Event(Type, Prop, DocLines):
     sup_type = EVENT
     def __init__(self, name, response_arg, key, comment, doc, scope):
         self.name = name
@@ -153,7 +165,7 @@ class Event(Type, Prop):
     def response_arg(self):
         return self._get_obj(self.scope.parent_scope, ["messages"], self._response_arg)
 
-class Enum(Type):
+class Enum(Type, DocLines):
     sup_type = ENUM
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name
@@ -171,7 +183,11 @@ class EnumField(Type, DocLines):
         self.doc = doc
         self.comment = comment
 
-class Service(object):
+class Service(DocLines):
+    MAJOR_VERSION = 0
+    MINOR_VERSION = 1
+    PATCH_VERSION = 2
+
     def __init__(self, name, doc, comment, parent_scope):
         self.name = name
         self.parent_scope = parent_scope
@@ -180,6 +196,49 @@ class Service(object):
         self.options = FieldOptions()
         self.doc = doc
         self.comment = comment
+
+    def _set_version_array(self):
+        self._version_array = map(int, self.version.split("."))
+        if len(self._version_array) == 2: self._version_array.append(0)
+        return self._version_array
+
+    @property
+    def version(self):
+        try: return self.options.version.value.strip("\"")
+        except AttributeError: return ""
+
+    @property
+    def major_version(self):
+        try: return self._version_array[self.MAJOR_VERSION]
+        except AttributeError: return self._set_version_array()[self.MAJOR_VERSION]
+
+    @property
+    def minor_version(self):
+        try: return self._version_array[self.MINOR_VERSION]
+        except AttributeError: return self._set_version_array()[self.MINOR_VERSION]
+
+    @property
+    def patch_version(self):
+        try: return self._version_array[self.PATCH_VERSION]
+        except AttributeError: return self._set_version_array()[self.PATCH_VERSION]
+
+    @property
+    def command_names(self):
+        cmds = map(lambda c: c.name, self.commands)
+        cmds.sort()
+        return cmds
+
+    @property
+    def event_names(self):
+        evs = map(lambda e: e.name, self.events)
+        evs.sort()
+        return evs
+
+    def __getattr__(self, key):
+        for t in [self.commands, self.events]:
+            for m in t:
+                if m.name == key: return m
+        raise AttributeError, key
 
 class Global(object):
     def __init__(self):
@@ -190,4 +249,4 @@ class Global(object):
         self.options = FieldOptions()
         self.parent_scope = None
 
-Type.primitives = (lambda gs: dict([(o.name, o) for o in gs if getattr(o, "sup_type", None) in PRIMITIVES]))(globals().values())
+Type.primitives = (lambda gs: dict([(o.name, o()) for o in gs if getattr(o, "sup_type", None) in PRIMITIVES]))(globals().values())
