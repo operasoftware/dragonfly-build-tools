@@ -62,13 +62,20 @@ pre a:hover
 
 .sidepanel
 {
-  padding: 10px;
+  padding: 0 10px;
   width: 230px;
   border-right: 1px solid hsl(0, 0%, 70%);
   position: fixed;
   top: 0;
   bottom: 0;
   overflow: auto;
+}
+
+.sidepanel h3
+{
+  background-color: #F2F2F2;
+  margin: 15px -10px;
+  padding: 1px 10px;
 }
 
 .sidepanel ul
