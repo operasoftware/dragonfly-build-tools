@@ -107,7 +107,7 @@ class Field(Prop, DocLines):
     @property
     def default_value(self):
         try: return self.options.default.value
-        except AttributeError: return ""
+        except AttributeError: return None
 
 class Message(Type, DocLines):
     sup_type = MESSAGE
