@@ -73,7 +73,6 @@ pre a:hover
 
 .sidepanel h3
 {
-  background-color: #F2F2F2;
   margin: 15px -10px;
   padding: 1px 10px;
 }
@@ -82,6 +81,7 @@ pre a:hover
 {
   list-style: none;
   padding: 0;
+  padding-left: 20px;
 }
 
 .sidepanel a
