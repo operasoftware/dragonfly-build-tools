@@ -27,6 +27,7 @@ RESOURCES = "resources"
 # index page
 HEAD_INDEX = """<!doctype html>
 <title>Scope Interface</title>
+<link rel="icon" href="./style/favicon.ico">
 <link rel="stylesheet" href="./style/style.css">
 <script src="./script/script.js"></script>
 <h1>Scope Interface <span class="service-version">STP/1</span></h1>
@@ -52,6 +53,7 @@ H3_INDEX_ONLY_VERSION = """<h3><a href="%s">&nbsp;<span class="service-version">
 # service interface
 HEAD = """<!doctype html>
 <title>%s.%s</title>
+<link rel="icon" href="./style/favicon.ico">
 <link rel="stylesheet" href="./style/style.css">
 <script src="./script/script.js"></script>
 """
