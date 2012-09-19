@@ -16,8 +16,8 @@ def join(*args): return "".join(args)
 
 def get_field_id(cmd_or_ev_name, recurse_list, field=""):
     if field:
-        return "%s.%s.%s" % (cmd_or_ev_name, join(*(m.name for m in recurse_list)), field.name)
-    return "%s.%s" % (cmd_or_ev_name, join(*(m.name for m in recurse_list)))
+        return "%s.%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)), field.name)
+    return "%s.%s" % (cmd_or_ev_name, ".".join((m.name for m in recurse_list)))
 
 SOURCE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CSS_CLASSES = {protoobjects.NUMBER: "number",
