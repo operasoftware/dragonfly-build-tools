@@ -16,6 +16,7 @@ import verifyids
 import showconfig
 import build
 import cleanrepo
+import normws
 import codegen.msgdefs
 import codegen.jsclasses
 import codegen.scopedoc
